@@ -155,7 +155,7 @@ void DisplayWeather() {                 // 4.2" e-paper display is 400x300 resol
   DisplayPrecipitationSection(233, 82); // Precipitation sectio
   if (WxConditions[0].Visibility > 0) Visibility(335, 100, String(WxConditions[0].Visibility) + "M");
   if (WxConditions[0].Cloudcover > 0) CloudCover(350, 125, WxConditions[0].Cloudcover);
-  DrawTideSection(233, 138);            // Local daily tide table and graph
+  DrawAstronomySection(233, 74);        // Middle-right Sun rise/set, Moon phase and Moon icon
 }
 //#########################################################################################
 void DrawHeadingSection() {
@@ -383,54 +383,6 @@ void DisplayPrecipitationSection(int x, int y) {
   if (WxForecast[1].Snowfall > 0.005)  // Ignore small amounts
     drawString(x + 5, y + 35, String(WxForecast[1].Snowfall, 2) + (Units == "M" ? "mm" : "in") + " * *", LEFT); // Only display snowfall total today if > 0
 }
-//#########################################################################################
-void DrawTideSection(int x, int y) {
-  display.drawRect(x, y, 167, 48, GxEPD_BLACK);
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
-  drawString(x + 5, y + 2, "Tides " + String(LOCAL_TIDE_STATION), LEFT);
-  drawString(x + 162, y + 2, String(LOCAL_TIDE_DATE), RIGHT);
-
-  if (LocalTideCount == 0) {
-    drawString(x + 84, y + 22, "No tide data", CENTER);
-    return;
-  }
-
-  const int graph_x = x + 8;
-  const int graph_y = y + 18;
-  const int graph_w = 92;
-  const int graph_h = 20;
-  float min_height = LocalTides[0].height_ft;
-  float max_height = LocalTides[0].height_ft;
-  for (int i = 1; i < LocalTideCount; i++) {
-    if (LocalTides[i].height_ft < min_height) min_height = LocalTides[i].height_ft;
-    if (LocalTides[i].height_ft > max_height) max_height = LocalTides[i].height_ft;
-  }
-  if (max_height - min_height < 0.1) {
-    max_height += 0.1;
-    min_height -= 0.1;
-  }
-
-  display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
-  int last_x = graph_x;
-  int last_y = graph_y + graph_h / 2;
-  for (int i = 0; i < LocalTideCount; i++) {
-    int px = graph_x + 2;
-    if (LocalTideCount > 1) px = graph_x + 2 + i * (graph_w - 4) / (LocalTideCount - 1);
-    int py = graph_y + graph_h - 2 - int((LocalTides[i].height_ft - min_height) * (graph_h - 4) / (max_height - min_height));
-    if (i > 0) display.drawLine(last_x, last_y, px, py, GxEPD_BLACK);
-    display.fillCircle(px, py, 2, GxEPD_BLACK);
-    last_x = px;
-    last_y = py;
-  }
-  drawString(graph_x, graph_y + graph_h + 1, String(min_height, 1), LEFT);
-  drawString(graph_x + graph_w, graph_y + graph_h + 1, String(max_height, 1), RIGHT);
-
-  for (int i = 0; i < LocalTideCount && i < 4; i++) {
-    String row = String(LocalTides[i].type) + " " + String(LocalTides[i].time) + " " + String(LocalTides[i].height_ft, 1);
-    drawString(x + 106, y + 13 + (i * 8), row, LEFT);
-  }
-}
-//#########################################################################################
 void DrawAstronomySection(int x, int y) {
   u8g2Fonts.setFont(u8g2_font_helvB08_tf);
   display.drawRect(x, y + 64, 167, 48, GxEPD_BLACK);
