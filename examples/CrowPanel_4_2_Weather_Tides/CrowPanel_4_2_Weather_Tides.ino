@@ -318,10 +318,10 @@ void DrawCurrentTideStatus(int x, int y) {
   float tide_height = TideHeightAtHour(current_hour);
   bool rising = IsTideRisingAtHour(current_hour);
   u8g2Fonts.setFont(u8g2_font_helvB08_tf);
-  drawString(x - 5, y - 10, "Tide", CENTER);
+  drawString(x - 5, y - 13, "Tide", CENTER);
   u8g2Fonts.setFont(u8g2_font_helvB12_tf);
-  drawString(x - 4, y + 2, String(tide_height, 1) + "ft", CENTER);
-  DrawTideArrow(x + 36, y + 2, rising);
+  drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
+  DrawTideArrow(x + 36, y - 2, rising);
 }
 //#########################################################################################
 void DrawTide24hGraph(int x, int y, int w, int h) {

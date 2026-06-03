@@ -52,3 +52,20 @@ Include a final `{24, ...}` sample so the interpolation works cleanly through th
 ## Layout Preview
 
 `layout-preview.svg` and `layout-preview.png` are hand-built approximate desktop previews of the 400x300 layout, not output captured from GxEPD2. They are useful for checking big spacing decisions, but final font sizes and e-paper refresh behavior still need to be verified on the CrowPanel.
+
+## Software Renderer
+
+`preview/render_preview.py` is the preferred desktop preview tool. It ports the firmware layout into a 400x300 1-bit Pillow canvas, reads tide samples from `local_tides.h`, and uses `preview/fixture.json` for weather data.
+
+Run it from this example directory:
+
+```bash
+python3 preview/render_preview.py
+```
+
+Outputs:
+
+- `preview/software-render-raw-1bit.png`: raw 400x300 1-bit preview.
+- `preview/software-render.png`: scaled preview for easier inspection.
+
+This is not a GxEPD2 hardware framebuffer capture, but it exercises the same layout decisions closely enough to catch text collisions, graph placement, and panel spacing before flashing the CrowPanel.
