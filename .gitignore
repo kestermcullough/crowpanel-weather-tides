@@ -1,0 +1,3 @@
+.venv-platformio/
+.pio/
+examples/*/.pio/

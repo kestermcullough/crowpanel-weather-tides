@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 400 300">
+<rect width="400" height="300" fill="#f8f8f8"/>
+<text x="4" y="10" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="start">09:42</text>
+<text x="200" y="10" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">NEW YORK</text>
+<text x="396" y="10" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="end">Tue 02-Jun-2026</text>
+<line x1="0" y1="12" x2="400" y2="12" stroke="black" stroke-width="1"/>
+<line x1="0" y1="15" x2="0" y2="140" stroke="black" stroke-width="1"/>
+<circle cx="57" cy="67" r="40" fill="white" stroke="black"/>
+<circle cx="57" cy="67" r="28" fill="none" stroke="black"/>
+<text x="57" y="38" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">N</text>
+<text x="57" y="112" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">S</text>
+<text x="18" y="70" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">W</text>
+<text x="96" y="70" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">E</text>
+<text x="57" y="64" font-family="Arial, sans-serif" font-size="18" font-weight="400" text-anchor="middle">8.1</text>
+<text x="57" y="78" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">mph</text>
+<polygon points="77,98 71,83 85,89" fill="black"/>
+<text x="177" y="60" font-family="Arial, sans-serif" font-size="48" font-weight="400" text-anchor="middle">☁</text>
+<text x="147" y="108" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">72.4°F</text>
+<text x="202" y="108" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">63%</text>
+<text x="52" y="122" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">Tide</text>
+<text x="52" y="137" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">3.2ft</text>
+<polygon points="91,124 87,131 95,131" fill="black"/><rect x="90" y="131" width="3" height="6" fill="black"/>
+<rect x="233" y="15" width="55" height="65" fill="white" stroke="black" stroke-width="1"/>
+<line x1="234" y1="28" x2="287" y2="28" stroke="black" stroke-width="1"/>
+<text x="260" y="25" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">10:00</text>
+<text x="260" y="55" font-family="Arial, sans-serif" font-size="20" font-weight="400" text-anchor="middle">☀</text>
+<text x="261" y="75" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">74°/68°</text>
+<rect x="289" y="15" width="55" height="65" fill="white" stroke="black" stroke-width="1"/>
+<line x1="290" y1="28" x2="343" y2="28" stroke="black" stroke-width="1"/>
+<text x="316" y="25" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">13:00</text>
+<text x="316" y="55" font-family="Arial, sans-serif" font-size="20" font-weight="400" text-anchor="middle">☁</text>
+<text x="317" y="75" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">75°/69°</text>
+<rect x="345" y="15" width="55" height="65" fill="white" stroke="black" stroke-width="1"/>
+<line x1="346" y1="28" x2="399" y2="28" stroke="black" stroke-width="1"/>
+<text x="372" y="25" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">16:00</text>
+<text x="372" y="55" font-family="Arial, sans-serif" font-size="20" font-weight="400" text-anchor="middle">☂</text>
+<text x="373" y="75" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">73°/67°</text>
+<rect x="233" y="81" width="167" height="56" fill="white" stroke="black" stroke-width="1"/>
+<text x="242" y="104" font-family="Arial, sans-serif" font-size="10" font-weight="400" text-anchor="start">0.00in</text>
+<text x="335" y="104" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="start">Vis 10000m</text>
+<text x="335" y="126" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="start">Cloud 40%</text>
+<rect x="0" y="138" width="232" height="48" fill="white" stroke="black" stroke-width="1"/>
+<text x="6" y="150" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="start">24h Tide</text>
+<text x="225" y="150" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="end">3.2ft</text>
+<rect x="8" y="153" width="216" height="24" fill="white" stroke="black" stroke-width="1"/>
+<polyline points="8.0,170.0 17.0,173.7 26.0,175.0 35.0,173.7 44.0,170.0 53.0,165.0 62.0,160.0 71.0,156.3 80.0,155.0 89.0,156.3 98.0,160.0 107.0,165.0 116.0,170.0 125.0,173.7 134.0,175.0 143.0,173.7 152.0,170.0 161.0,165.0 170.0,160.0 179.0,156.3 188.0,155.0 197.0,156.3 206.0,160.0 215.0,165.0 224.0,170.0" fill="none" stroke="black" stroke-width="1"/>
+<line x1="8" y1="177" x2="8" y2="180" stroke="black" stroke-width="1"/>
+<text x="8" y="188" font-family="Arial, sans-serif" font-size="7" font-weight="400" text-anchor="middle">0</text>
+<line x1="62" y1="177" x2="62" y2="180" stroke="black" stroke-width="1"/>
+<text x="62" y="188" font-family="Arial, sans-serif" font-size="7" font-weight="400" text-anchor="middle">6</text>
+<line x1="116" y1="177" x2="116" y2="180" stroke="black" stroke-width="1"/>
+<text x="116" y="188" font-family="Arial, sans-serif" font-size="7" font-weight="400" text-anchor="middle">12</text>
+<line x1="170" y1="177" x2="170" y2="180" stroke="black" stroke-width="1"/>
+<text x="170" y="188" font-family="Arial, sans-serif" font-size="7" font-weight="400" text-anchor="middle">18</text>
+<line x1="224" y1="177" x2="224" y2="180" stroke="black" stroke-width="1"/>
+<text x="224" y="188" font-family="Arial, sans-serif" font-size="7" font-weight="400" text-anchor="middle">24</text>
+<line x1="98" y1="153" x2="98" y2="177" stroke="black" stroke-width="1"/>
+<rect x="233" y="138" width="167" height="48" fill="white" stroke="black" stroke-width="1"/>
+<text x="240" y="153" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="start">06:14 Sunrise</text>
+<text x="240" y="168" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="start">20:21 Sunset</text>
+<text x="240" y="183" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="start">Waxing Gibbous</text>
+<path d="M365 147 A18 18 0 1 0 365 183 A13 18 0 1 1 365 147" fill="black" stroke="black"/><circle cx="371" cy="165" r="18" fill="white" stroke="black"/>
+<line x1="0" y1="187" x2="400" y2="187" stroke="black" stroke-width="1"/>
+<text x="200" y="202" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle">3-Day Forecast Values</text>
+<text x="80" y="218" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">Wind (mph)</text>
+<rect x="30" y="224" width="100" height="54" fill="white" stroke="black" stroke-width="1"/>
+<line x1="30" y1="237.5" x2="130" y2="237.5" stroke="black" stroke-width="1"/>
+<line x1="30" y1="251" x2="130" y2="251" stroke="black" stroke-width="1"/>
+<line x1="30" y1="264.5" x2="130" y2="264.5" stroke="black" stroke-width="1"/>
+<polyline points="35,260 43,254.11049545766926 51,248.86934354474474 59,244.85352227345786 67,242.50511777546038 75,242.08265676046824 83,243.63264631713773 91,246.98445412871015 99,251.7690927205554 107,257.4598398549224 115,263.4302233317587 123,269.02298687459023" fill="none" stroke="black" stroke-width="1"/>
+<text x="80" y="292" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">(Days)</text>
+<text x="208" y="218" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">Temperature (°F)</text>
+<rect x="158" y="224" width="100" height="54" fill="white" stroke="black" stroke-width="1"/>
+<line x1="158" y1="237.5" x2="258" y2="237.5" stroke="black" stroke-width="1"/>
+<line x1="158" y1="251" x2="258" y2="251" stroke="black" stroke-width="1"/>
+<line x1="158" y1="264.5" x2="258" y2="264.5" stroke="black" stroke-width="1"/>
+<polyline points="163,260 171,254.11049545766926 179,248.86934354474474 187,244.85352227345786 195,242.50511777546038 203,242.08265676046824 211,243.63264631713773 219,246.98445412871015 227,251.7690927205554 235,257.4598398549224 243,263.4302233317587 251,269.02298687459023" fill="none" stroke="black" stroke-width="1"/>
+<text x="208" y="292" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">(Days)</text>
+<text x="338" y="218" font-family="Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle">Rainfall (in)</text>
+<rect x="288" y="224" width="100" height="54" fill="white" stroke="black" stroke-width="1"/>
+<line x1="288" y1="237.5" x2="388" y2="237.5" stroke="black" stroke-width="1"/>
+<line x1="288" y1="251" x2="388" y2="251" stroke="black" stroke-width="1"/>
+<line x1="288" y1="264.5" x2="388" y2="264.5" stroke="black" stroke-width="1"/>
+<rect x="296" y="273" width="4" height="5" fill="black"/>
+<rect x="303" y="268" width="4" height="10" fill="black"/>
+<rect x="310" y="263" width="4" height="15" fill="black"/>
+<rect x="317" y="258" width="4" height="20" fill="black"/>
+<rect x="324" y="253" width="4" height="25" fill="black"/>
+<rect x="331" y="273" width="4" height="5" fill="black"/>
+<rect x="338" y="268" width="4" height="10" fill="black"/>
+<rect x="345" y="263" width="4" height="15" fill="black"/>
+<rect x="352" y="258" width="4" height="20" fill="black"/>
+<rect x="359" y="253" width="4" height="25" fill="black"/>
+<rect x="366" y="273" width="4" height="5" fill="black"/>
+<rect x="373" y="268" width="4" height="10" fill="black"/>
+<text x="338" y="292" font-family="Arial, sans-serif" font-size="8" font-weight="400" text-anchor="middle">(Days)</text>
+</svg>
