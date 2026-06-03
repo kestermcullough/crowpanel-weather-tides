@@ -90,6 +90,7 @@ float temperature_readings[max_readings] = {0};
 float humidity_readings[max_readings]    = {0};
 float rain_readings[max_readings]        = {0};
 float snow_readings[max_readings]        = {0};
+float wind_readings[max_readings]        = {0};
 
 long SleepDuration = 30; // Sleep time in minutes, aligned to the nearest minute boundary, so if 30 will always update at 00 or 30 past the hour
 int  WakeupTime    = 7;  // Don't wakeup until after 07:00 to save battery power
@@ -170,14 +171,11 @@ void DrawMainWeatherSection(int x, int y) {
   DisplayDisplayWindSection(x - 115, y - 3, WxConditions[0].Winddir, WxConditions[0].Windspeed, 40);
   DisplayWXicon(x + 5, y - 5, WxConditions[0].Icon, LargeIcon);
   u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  DrawPressureAndTrend(x - 120, y + 58, WxConditions[0].Pressure, WxConditions[0].Trend);
+  DrawCurrentTideStatus(x - 120, y + 58);
   u8g2Fonts.setFont(u8g2_font_helvB12_tf);
-  String Wx_Description = WxConditions[0].Forecast0;
-  if (WxConditions[0].Forecast1 != "") Wx_Description += " & " +  WxConditions[0].Forecast1;
-  if (WxConditions[0].Forecast2 != "" && WxConditions[0].Forecast1 != WxConditions[0].Forecast2) Wx_Description += " & " +  WxConditions[0].Forecast2;
-  drawStringMaxWidth(x - 170, y + 83, 28, TitleCase(Wx_Description), LEFT);
   DrawMainWx(x, y + 60);
   display.drawRect(0, y + 68, 232, 48, GxEPD_BLACK);
+  DrawTide24hGraph(0, y + 68, 232, 48);
 }
 //#########################################################################################
 void DrawForecastSection(int x, int y) {
@@ -196,12 +194,13 @@ void DrawForecastSection(int x, int y) {
       rain_readings[r]     = WxForecast[r].Rainfall;
     }
     temperature_readings[r] = WxForecast[r].Temperature;
+    wind_readings[r]        = WxForecast[r].Windspeed;
   }
   display.drawLine(0, y + 172, SCREEN_WIDTH, y + 172, GxEPD_BLACK);
   u8g2Fonts.setFont(u8g2_font_helvB12_tf);
   drawString(SCREEN_WIDTH / 2, y + 180, TXT_FORECAST_VALUES, CENTER);
   u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  DrawGraph(SCREEN_WIDTH / 400 * 30,  SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 900, 1050, Units == "M" ? TXT_PRESSURE_HPA : TXT_PRESSURE_IN, pressure_readings, max_readings, autoscale_on, barchart_off);
+  DrawGraph(SCREEN_WIDTH / 400 * 30,  SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 0, 30, Units == "M" ? "Wind (m/s)" : "Wind (mph)", wind_readings, max_readings, autoscale_on, barchart_off);
   DrawGraph(SCREEN_WIDTH / 400 * 158, SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 10, 30, Units == "M" ? TXT_TEMPERATURE_C : TXT_TEMPERATURE_F, temperature_readings, max_readings, autoscale_on, barchart_off);
   DrawGraph(SCREEN_WIDTH / 400 * 288, SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 0, 30, Units == "M" ? TXT_RAINFALL_MM : TXT_RAINFALL_IN, rain_readings, max_readings, autoscale_on, barchart_on);
 }
@@ -279,6 +278,99 @@ void DrawPressureAndTrend(int x, int y, float pressure, String slope) {
     display.drawLine(x,  y, x + 4, y + 4, GxEPD_BLACK);
     display.drawLine(x + 4, y + 4, x + 8, y, GxEPD_BLACK);
   }
+}
+//#########################################################################################
+float TideHeightAtHour(float hour) {
+  if (LocalTideSampleCount == 0) return 0;
+  if (hour <= LocalTideSamples[0].hour) return LocalTideSamples[0].height_ft;
+  for (int i = 1; i < LocalTideSampleCount; i++) {
+    if (hour <= LocalTideSamples[i].hour) {
+      float prev_hour = LocalTideSamples[i - 1].hour;
+      float next_hour = LocalTideSamples[i].hour;
+      float span = next_hour - prev_hour;
+      if (span <= 0) return LocalTideSamples[i].height_ft;
+      float ratio = (hour - prev_hour) / span;
+      return LocalTideSamples[i - 1].height_ft + ratio * (LocalTideSamples[i].height_ft - LocalTideSamples[i - 1].height_ft);
+    }
+  }
+  return LocalTideSamples[LocalTideSampleCount - 1].height_ft;
+}
+//#########################################################################################
+bool IsTideRisingAtHour(float hour) {
+  float next_hour = hour + 0.5;
+  if (next_hour > 24) next_hour = 24;
+  return TideHeightAtHour(next_hour) >= TideHeightAtHour(hour);
+}
+//#########################################################################################
+void DrawTideArrow(int x, int y, bool rising) {
+  if (rising) {
+    display.fillTriangle(x, y - 6, x - 4, y + 1, x + 4, y + 1, GxEPD_BLACK);
+    display.fillRect(x - 1, y + 1, 3, 6, GxEPD_BLACK);
+  }
+  else {
+    display.fillTriangle(x, y + 6, x - 4, y - 1, x + 4, y - 1, GxEPD_BLACK);
+    display.fillRect(x - 1, y - 7, 3, 6, GxEPD_BLACK);
+  }
+}
+//#########################################################################################
+void DrawCurrentTideStatus(int x, int y) {
+  float current_hour = CurrentHour + CurrentMin / 60.0;
+  float tide_height = TideHeightAtHour(current_hour);
+  bool rising = IsTideRisingAtHour(current_hour);
+  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  drawString(x - 5, y - 10, "Tide", CENTER);
+  u8g2Fonts.setFont(u8g2_font_helvB12_tf);
+  drawString(x - 4, y + 2, String(tide_height, 1) + "ft", CENTER);
+  DrawTideArrow(x + 36, y + 2, rising);
+}
+//#########################################################################################
+void DrawTide24hGraph(int x, int y, int w, int h) {
+  if (LocalTideSampleCount == 0) {
+    u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+    drawString(x + w / 2, y + h / 2 - 5, "No tide data", CENTER);
+    return;
+  }
+
+  float min_height = LocalTideSamples[0].height_ft;
+  float max_height = LocalTideSamples[0].height_ft;
+  for (int i = 1; i < LocalTideSampleCount; i++) {
+    if (LocalTideSamples[i].height_ft < min_height) min_height = LocalTideSamples[i].height_ft;
+    if (LocalTideSamples[i].height_ft > max_height) max_height = LocalTideSamples[i].height_ft;
+  }
+  if (max_height - min_height < 0.1) {
+    max_height += 0.1;
+    min_height -= 0.1;
+  }
+
+  const int graph_x = x + 8;
+  const int graph_y = y + 13;
+  const int graph_w = w - 16;
+  const int graph_h = h - 24;
+
+  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  drawString(x + 6, y + 2, "24h Tide", LEFT);
+  drawString(x + w - 6, y + 2, String(TideHeightAtHour(CurrentHour + CurrentMin / 60.0), 1) + "ft", RIGHT);
+  display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
+
+  int last_x = graph_x;
+  int last_y = graph_y + graph_h / 2;
+  for (int hour = 0; hour <= 24; hour++) {
+    float tide_height = TideHeightAtHour(hour);
+    int px = graph_x + hour * graph_w / 24;
+    int py = graph_y + graph_h - 2 - int((tide_height - min_height) * (graph_h - 4) / (max_height - min_height));
+    if (hour > 0) display.drawLine(last_x, last_y, px, py, GxEPD_BLACK);
+    last_x = px;
+    last_y = py;
+  }
+
+  for (int hour = 0; hour <= 24; hour += 6) {
+    int tx = graph_x + hour * graph_w / 24;
+    display.drawLine(tx, graph_y + graph_h, tx, graph_y + graph_h + 3, GxEPD_BLACK);
+    drawString(tx, graph_y + graph_h + 4, String(hour), CENTER);
+  }
+
+  int now_x = graph_x + CurrentHour * graph_w / 24;
+  display.drawLine(now_x, graph_y, now_x, graph_y + graph_h, GxEPD_BLACK);
 }
 //#########################################################################################
 void DisplayPrecipitationSection(int x, int y) {

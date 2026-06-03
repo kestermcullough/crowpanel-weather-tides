@@ -160,6 +160,8 @@ bool DecodeOneCallWeather(WiFiClient& json, bool print) {
     WxForecast[r].Pressure    = hourly["pressure"];           if (print) Serial.println("Pres: " + String(WxForecast[r].Pressure));
     WxForecast[r].Humidity    = hourly["humidity"];           if (print) Serial.println("Humi: " + String(WxForecast[r].Humidity));
     WxForecast[r].DewPoint    = hourly["dew_point"];          if (print) Serial.println("DewP: " + String(WxForecast[r].DewPoint));
+    WxForecast[r].Windspeed   = hourly["wind_speed"];         if (print) Serial.println("WSpd: " + String(WxForecast[r].Windspeed));
+    WxForecast[r].Winddir     = hourly["wind_deg"];           if (print) Serial.println("WDir: " + String(WxForecast[r].Winddir));
     WxForecast[r].Rainfall    = hourly["rain"]["1h"];         if (print) Serial.println("Rain: " + String(WxForecast[r].Rainfall));
     WxForecast[r].Snowfall    = hourly["snow"]["1h"];         if (print) Serial.println("Snow: " + String(WxForecast[r].Snowfall));
     WxForecast[r].Rainfall    = hourly["rain"]["1h"];         if (print) Serial.println("Rain: " + String(WxForecast[r].Rainfall));
