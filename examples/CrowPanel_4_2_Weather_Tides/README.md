@@ -5,9 +5,10 @@ This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel 
 ## CrowPanel Changes
 
 - Uses CrowPanel display power enable on GPIO 7.
+- Also enables GPIO 41 for newer "green circular sticker" CrowPanel revisions.
 - Uses CrowPanel e-paper SPI pins: SCK 12, MOSI 11, RST 47, DC 46, CS 45, BUSY 48.
-- Uses `GxEPD2_420_GYE042A87` for the 400x300 SSD1683 panel.
-- Uses a full-window paged redraw for a cleaner refresh.
+- Uses a 400x300 `GFXcanvas1` framebuffer and Elecrow's newer command sequence instead of GxEPD2.
+- Uses a full-screen redraw for a cleaner refresh.
 - Replaces the pressure value/trend callout with current tide height plus a rising/falling arrow.
 - Replaces the current-condition description band with a 24-hour local tide graph.
 - Replaces the bottom-left 3-day pressure graph with a 3-day wind graph.
@@ -20,12 +21,22 @@ This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel 
 3. Arduino IDE board settings:
    - Board: `ESP32S3 Dev Module`
    - Flash size: `8MB`
-   - PSRAM: `OPI PSRAM`
+   - PSRAM: disabled/not required for the current PlatformIO build
    - Partition scheme: large/Huge APP
    - Upload speed: `115200`
 4. Upload over USB-C.
 
 The default refresh is 30 minutes. Keep it at 15 minutes or slower unless you have intentionally raised your OpenWeather One Call usage limit.
+
+## Static Panel Test
+
+Before testing Wi-Fi and OpenWeather credentials, flash the static preview environment:
+
+```sh
+../../.venv-platformio/bin/platformio run -e esp32s3_static -t upload
+```
+
+This uses deterministic sample weather values and the local tide table, then refreshes the physical CrowPanel with the same firmware layout.
 
 ## Tide Data
 
@@ -51,7 +62,7 @@ Include a final `{24, ...}` sample so the interpolation works cleanly through th
 
 ## Layout Preview
 
-`layout-preview.svg` and `layout-preview.png` are hand-built approximate desktop previews of the 400x300 layout, not output captured from GxEPD2. They are useful for checking big spacing decisions, but final font sizes and e-paper refresh behavior still need to be verified on the CrowPanel.
+`layout-preview.svg` and `layout-preview.png` are hand-built approximate desktop previews of the 400x300 layout. They are useful for checking big spacing decisions, but final font sizes and e-paper refresh behavior still need to be verified on the CrowPanel.
 
 ## Software Renderer
 
@@ -68,4 +79,4 @@ Outputs:
 - `preview/software-render-raw-1bit.png`: raw 400x300 1-bit preview.
 - `preview/software-render.png`: scaled preview for easier inspection.
 
-This is not a GxEPD2 hardware framebuffer capture, but it exercises the same layout decisions closely enough to catch text collisions, graph placement, and panel spacing before flashing the CrowPanel.
+This is not a hardware framebuffer capture, but it exercises the same layout decisions closely enough to catch text collisions, graph placement, and panel spacing before flashing the CrowPanel.

@@ -23,11 +23,9 @@
 #include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>              // Built-in
 #include "time.h"              // Built-in
-#include <SPI.h>               // Built-in
-#define  ENABLE_GxEPD2_display 0
-#include <GxEPD2_BW.h>
-#include <GxEPD2_3C.h>
+#include <Adafruit_GFX.h>
 #include <U8g2_for_Adafruit_GFX.h>
+#include "crowpanel_green_epd.h"
 #include "epaper_fonts.h"
 #include "lang.h"
 //#include "lang_cz.h"                // Localisation (Czech)
@@ -40,19 +38,16 @@
 #define SCREEN_WIDTH  400.0    // Set for landscape mode, don't remove the decimal place!
 #define SCREEN_HEIGHT 300.0
 
+#define GxEPD_WHITE 1
+#define GxEPD_BLACK 0
+
+#ifndef CROWPANEL_STATIC_PREVIEW
+#define CROWPANEL_STATIC_PREVIEW 0
+#endif
+
 enum alignment {LEFT, RIGHT, CENTER};
 
-// Elecrow CrowPanel ESP32-S3 4.2" E-Paper HMI Display
-static const uint8_t EPD_PWR  = 7;   // display power enable, HIGH = on
-static const uint8_t EPD_BUSY = 48;
-static const uint8_t EPD_CS   = 45;
-static const uint8_t EPD_RST  = 47;
-static const uint8_t EPD_DC   = 46;
-static const uint8_t EPD_SCK  = 12;
-static const int8_t  EPD_MISO = -1;  // display does not use MISO
-static const uint8_t EPD_MOSI = 11;
-
-GxEPD2_BW<GxEPD2_420_GYE042A87, GxEPD2_420_GYE042A87::HEIGHT> display(GxEPD2_420_GYE042A87(EPD_CS, EPD_DC, EPD_RST, EPD_BUSY));
+GFXcanvas1 display(CrowPanelEPD::WIDTH, CrowPanelEPD::HEIGHT);
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;  // Select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
 
 // Using fonts:
@@ -64,7 +59,7 @@ U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;  // Select u8g2 font from here: https://github.
 // u8g2_font_helvB24_tf
 
 //################  VERSION  ##########################
-String version = "12.5-crowpanel-tides";     // Version of this program
+String version = "12.6-crowpanel-green-tides";     // Version of this program
 //################ VARIABLES ###########################
 
 boolean LargeIcon = true, SmallIcon = false;
@@ -73,6 +68,7 @@ boolean LargeIcon = true, SmallIcon = false;
 String  time_str, date_str; // strings to hold time and received weather data
 int     wifi_signal, CurrentHour = 0, CurrentMin = 0, CurrentSec = 0;
 long    StartTime = 0;
+bool    DisplayInitialised = false;
 
 //################ PROGRAM VARIABLES and OBJECTS ################
 
@@ -96,12 +92,21 @@ long SleepDuration = 30; // Sleep time in minutes, aligned to the nearest minute
 int  WakeupTime    = 7;  // Don't wakeup until after 07:00 to save battery power
 int  SleepTime     = 23; // Sleep after (23+1) 00:00 to save battery power
 
+void LoadStaticPreviewData();
+
 //#########################################################################################
 void setup() {
   StartTime = millis();
   Serial.begin(115200);
-  pinMode(EPD_PWR, OUTPUT);
-  digitalWrite(EPD_PWR, LOW);
+  CrowPanelEPD::powerOff();
+#if CROWPANEL_STATIC_PREVIEW
+  Serial.println("Running static weather/tide panel preview");
+  LoadStaticPreviewData();
+  InitialiseDisplay();
+  display.fillScreen(GxEPD_WHITE);
+  DisplayWeather();
+  CrowPanelEPD::refresh(display.getBuffer());
+#else
   if (StartWiFi() == WL_CONNECTED && SetupTime() == true) {
     if (CurrentHour >= WakeupTime && CurrentHour <= SleepTime ) {
       InitialiseDisplay(); // Give screen time to initialise by getting weather data!
@@ -114,24 +119,72 @@ void setup() {
       }
       if (RxWeather) { // Only if received both Weather or Forecast proceed
         StopWiFi(); // Reduces power consumption
-        display.setFullWindow();
-        display.firstPage();
-        do {
-          display.fillScreen(GxEPD_WHITE);
-          DisplayWeather();
-        } while (display.nextPage());
+        display.fillScreen(GxEPD_WHITE);
+        DisplayWeather();
+        CrowPanelEPD::refresh(display.getBuffer());
       }
     }
   }
+#endif
   BeginSleep();
 }
 //#########################################################################################
 void loop() { // this will never run!
 }
 //#########################################################################################
+void LoadStaticPreviewData() {
+  const bool metric = Units == "M";
+  CurrentHour = 14;
+  CurrentMin = 35;
+  CurrentSec = 0;
+  wifi_signal = -54;
+  date_str = "Thu Jun-11-2026";
+  time_str = metric ? "14:35:00" : "02:35pm";
+
+  WxConditions[0].Timezone = 0;
+  WxConditions[0].Sunrise = 6 * 3600 + 8 * 60;
+  WxConditions[0].Sunset = 20 * 3600 + 18 * 60;
+  WxConditions[0].Temperature = metric ? 20.4 : 68.7;
+  WxConditions[0].High = metric ? 23.0 : 73.0;
+  WxConditions[0].Low = metric ? 14.0 : 57.0;
+  WxConditions[0].Humidity = 64;
+  WxConditions[0].Pressure = metric ? 1017 : 30.0;
+  WxConditions[0].Windspeed = metric ? 4.8 : 10.7;
+  WxConditions[0].Winddir = 145;
+  WxConditions[0].Rainfall = 0;
+  WxConditions[0].Snowfall = 0;
+  WxConditions[0].Cloudcover = 38;
+  WxConditions[0].Visibility = 10000;
+  WxConditions[0].Icon = "02d";
+  WxConditions[0].Description = "partly cloudy";
+  WxConditions[0].Trend = "0";
+
+  const char* icons[] = {"02d", "01d", "03d", "10d", "04d", "01n", "02n", "03n"};
+  for (int r = 0; r < 8; r++) {
+    Daily[r].Dt = (15 + r * 3) * 3600;
+    Daily[r].Icon = icons[r % 8];
+    Daily[r].High = (metric ? 21 : 70) + (r % 3);
+    Daily[r].Low = (metric ? 13 : 56) + (r % 2);
+    Daily[r].Description = "Preview forecast";
+  }
+
+  for (int r = 0; r < max_readings; r++) {
+    const float wave = sin(r * PI / 8.0);
+    WxForecast[r].Dt = (CurrentHour + r) * 3600;
+    WxForecast[r].Temperature = (metric ? 18.0 : 64.0) + wave * (metric ? 4.0 : 7.0);
+    WxForecast[r].Pressure = metric ? (1016 + cos(r * PI / 10.0) * 4) : (30.0 + cos(r * PI / 10.0) * 0.12);
+    WxForecast[r].Humidity = 58 + r % 7;
+    WxForecast[r].Windspeed = (metric ? 4.0 : 9.0) + abs(wave) * (metric ? 4.0 : 8.0);
+    WxForecast[r].Winddir = 120 + r * 8;
+    WxForecast[r].Rainfall = (r == 9 || r == 10 || r == 18) ? (metric ? 0.8 : 0.03) : 0;
+    WxForecast[r].Snowfall = 0;
+    WxForecast[r].Icon = icons[r % 8];
+  }
+}
+//#########################################################################################
 void BeginSleep() {
-  display.powerOff();
-  digitalWrite(EPD_PWR, LOW);
+  if (DisplayInitialised) CrowPanelEPD::sleep();
+  CrowPanelEPD::powerOff();
   long SleepTimer = SleepDuration * 60; // theoretical sleep duration
   long offset = (CurrentMin % SleepDuration) * 60 + CurrentSec; // number of seconds elapsed after last theoretical wake-up time point
   if (offset > SleepDuration/2 * 60){ // waking up too early will cause <offset> too large
@@ -841,19 +894,10 @@ void Nodata(int x, int y, bool IconSize, String IconName) {
 }
 //#########################################################################################
 void DrawBattery(int x, int y) {
-  uint8_t percentage = 100;
-  float voltage = analogRead(35) / 4096.0 * 7.46;
-  if (voltage > 1 ) { // Only display if there is a valid reading
-    Serial.println("Voltage = " + String(voltage));
-    percentage = 2836.9625 * pow(voltage, 4) - 43987.4889 * pow(voltage, 3) + 255233.8134 * pow(voltage, 2) - 656689.7123 * voltage + 632041.7303;
-    if (voltage >= 4.20) percentage = 100;
-    if (voltage <= 3.50) percentage = 0;
-    display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
-    display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
-    display.fillRect(x + 17, y - 10, 15 * percentage / 100.0, 6, GxEPD_BLACK);
-    drawString(x + 65, y - 11, String(percentage) + "%", RIGHT);
-    //drawString(x + 13, y + 5,  String(voltage, 2) + "v", CENTER);
-  }
+  display.drawRect(x + 15, y - 12, 19, 10, GxEPD_BLACK);
+  display.fillRect(x + 34, y - 10, 2, 5, GxEPD_BLACK);
+  display.fillRect(x + 17, y - 10, 15, 6, GxEPD_BLACK);
+  drawString(x + 65, y - 11, "USB", RIGHT);
 }
 //#########################################################################################
 /* (C) D L BIRD
@@ -970,11 +1014,8 @@ void drawStringMaxWidth(int x, int y, unsigned int text_width, String text, alig
 }
 //#########################################################################################
 void InitialiseDisplay() {
-  digitalWrite(EPD_PWR, HIGH);
-  delay(50);
-  SPI.end();
-  SPI.begin(EPD_SCK, EPD_MISO, EPD_MOSI, EPD_CS);
-  display.init(115200, true, 50, false);
+  CrowPanelEPD::begin();
+  DisplayInitialised = true;
   u8g2Fonts.begin(display); // connect u8g2 procedures to Adafruit GFX
   u8g2Fonts.setFontMode(1);                  // use u8g2 transparent mode (this is default)
   u8g2Fonts.setFontDirection(0);             // left to right (this is default)
@@ -982,7 +1023,6 @@ void InitialiseDisplay() {
   u8g2Fonts.setBackgroundColor(GxEPD_WHITE); // apply Adafruit GFX color
   u8g2Fonts.setFont(u8g2_font_helvB10_tf);   // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
   display.fillScreen(GxEPD_WHITE);
-  display.setFullWindow();
 }
 /*
   Version 12.0 reformatted to use u8g2 fonts
@@ -1004,4 +1044,8 @@ void InitialiseDisplay() {
 
   Version 12.5
   1. Modified for GxEPD2 changes
+
+  Version 12.6-crowpanel-green-tides
+  1. Uses Elecrow green-sticker CrowPanel framebuffer refresh instead of GxEPD2
+  2. Adds static weather/tide preview environment
 */
