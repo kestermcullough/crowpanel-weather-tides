@@ -115,6 +115,7 @@ void DumpFramebuffer(const char* label);
 float UnixLocalHour(int unix_time);
 String ForecastTimeLabel(int unix_time);
 String FormatVisibility(int visibility_meters);
+void DrawNoonMidnightMarkers(int x_pos, int y_pos, int gwidth, int gheight);
 void SetUIFont(UIFontSize size);
 const char* FontGalleryLabel();
 int FontGalleryCount();
@@ -545,14 +546,13 @@ void DrawForecastWeather(int x, int y, int index) {
 //#########################################################################################
 void DrawMainWx(int x, int y) {
   SetUIFont(UI_FONT_14);
-  drawString(x - 25, y - 22, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
+  drawString(x + 5, y - 22, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
   SetUIFont(UI_FONT_12);
-  drawString(x - 15, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
-  drawString(x + 37, y - 22, String(WxConditions[0].Humidity, 0) + "%", CENTER);
+  drawString(x + 5, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
-  arrow(x, y, 0, angle, 8, 12); // Show wind direction inside the inner ring
+  arrow(x, y, 6, angle, 8, 10); // Show wind direction between the compass rings
   SetUIFont(UI_FONT_08);
   int dxo, dyo, dxi, dyi;
   display.drawLine(0, 15, 0, y + Cradius + 30, GxEPD_BLACK);
@@ -579,9 +579,8 @@ void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int C
   drawString(x, y + Cradius + 5,      TXT_S, CENTER);
   drawString(x - Cradius - 10, y - 3, TXT_W, CENTER);
   drawString(x + Cradius + 8,  y - 3, TXT_E, CENTER);
-  drawString(x - 2, y - 20, WindDegToDirection(angle), CENTER);
-  drawString(x + 3, y + 12, String(angle, 0) + "°", CENTER);
-  drawString(x + 3, y - 3, String(windspeed, 0) + (Units == "M" ? "m/s" : "mph"), CENTER);
+  drawString(x - 2, y - 13, WindDegToDirection(angle), CENTER);
+  drawString(x + 3, y + 3, String(windspeed, 0) + (Units == "M" ? "m/s" : "mph"), CENTER);
 }
 //#########################################################################################
 String WindDegToDirection(float winddirection) {
@@ -646,7 +645,7 @@ void DrawCurrentTideStatus(int x, int y) {
   bool rising = IsTideRisingAtHour(current_hour);
   SetUIFont(UI_FONT_12);
   drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
-  DrawTideArrow(x + 36, y - 2, rising);
+  DrawTideArrow(x + 36, y, rising);
 }
 //#########################################################################################
 void DrawTide24hGraph(int x, int y, int w, int h) {
@@ -674,7 +673,7 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 
   SetUIFont(UI_FONT_08);
   drawString(x + 6, y + 2, "24h Tide", LEFT);
-  drawString(x + w - 6, y + 2, String(TideHeightAtHour(CurrentHour + CurrentMin / 60.0), 1) + "ft", RIGHT);
+  drawString(x + w - 6, y + 2, String(max_height, 1) + "ft max", RIGHT);
   display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
 
   int last_x = graph_x;
@@ -714,10 +713,11 @@ void DisplayPrecipitationSection(int x, int y) {
   const float precip = WxForecast[1].Rainfall;
   const String precip_units = Units == "M" ? "mm" : "in";
   const String precip_text = String(precip, precip >= 1 ? 1 : 2) + precip_units;
-  addraindrop(x + 17, y + 16, 6);
-  drawString(x + 31, y + 7, precip_text, LEFT);
+  addraindrop(x + 15, y + 16, 5);
+  drawString(x + 29, y + 6, precip_text, LEFT);
+  drawString(x + 8, y + 30, "RH " + String(WxConditions[0].Humidity, 0) + "%", LEFT);
 
-  Visibility(x + 112, y + 19, FormatVisibility(WxConditions[0].Visibility));
+  Visibility(x + 112, y + 17, FormatVisibility(WxConditions[0].Visibility));
   CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
 }
 void DrawAstronomySection(int x, int y) {
@@ -1184,6 +1184,28 @@ void DrawBattery(int x, int y) {
   drawString(x + 65, y - 11, "USB", RIGHT);
 }
 //#########################################################################################
+void DrawNoonMidnightMarkers(int x_pos, int y_pos, int gwidth, int gheight) {
+  if (WxForecast[0].Dt <= 0) return;
+
+  const long start_local = long(WxForecast[0].Dt) + long(WxConditions[0].Timezone);
+  const long marker_step = 12L * 3600L;
+  const long chart_span = 72L * 3600L;
+  long marker_time = ((start_local / marker_step) + 1) * marker_step;
+
+  while (marker_time < start_local + chart_span) {
+    const float hours_from_start = (marker_time - start_local) / 3600.0;
+    const int marker_x = x_pos + int(hours_from_start * gwidth / 72.0);
+    const int marker_hour = (marker_time / 3600L) % 24L;
+    const int dash = marker_hour == 0 ? 3 : 1;
+    const int gap = marker_hour == 0 ? 3 : 4;
+
+    for (int marker_y = y_pos + 1; marker_y < y_pos + gheight; marker_y += dash + gap) {
+      display.drawFastVLine(marker_x, marker_y, dash, GxEPD_BLACK);
+    }
+    marker_time += marker_step;
+  }
+}
+//#########################################################################################
 /* (C) D L BIRD
     This function will draw a graph on a ePaper/TFT/LCD display using data from an array containing data to be graphed.
     The variable 'max_readings' determines the maximum number of data elements for each array. Call it with the following parametric data:
@@ -1223,6 +1245,7 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   display.drawRect(x_pos, y_pos, gwidth + 3, gheight + 2, GxEPD_BLACK);
   SetUIFont(UI_FONT_08);
   drawString(x_pos + gwidth / 2, y_pos - 13, title, CENTER);
+  DrawNoonMidnightMarkers(x_pos, y_pos, gwidth, gheight);
   // Draw the data
   for (int gx = 0; gx < readings; gx++) {
     y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;

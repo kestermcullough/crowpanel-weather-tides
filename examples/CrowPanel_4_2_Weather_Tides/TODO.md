@@ -35,19 +35,14 @@ Working branch: `codex/crowpanel-weather-tides`
 
 ## Next Chunk: Forecast Semantics
 
-- [ ] Decide how the 3-day bottom charts should communicate time of day.
+- [x] Decide how the 3-day bottom charts should communicate time of day.
   - Problem: rolling 72-hour charts show "how many hours from now", but storms two days out require mental math to know whether they are overnight, morning, midday, or evening.
-  - Option A: keep rolling 72 hours from now and add vertical dotted sunrise/sunset markers.
-  - Option B: keep rolling 72 hours and add midnight/day-boundary markers plus small day labels.
-  - Option C: switch back to fixed calendar-day 24-hour periods.
-  - Option D: keep the rolling chart but add a compact "next rain" label/callout with day/time and amount, e.g. `Rain Sat 5a`.
-  - Current lean: try Option B plus maybe Option D. It preserves forecast relevance while reducing mental math more than sunrise/sunset alone.
-- [ ] Update bottom chart x-axis labels if we add semantic markers.
-  - Candidate: replace bare `0 1 2 3` with day labels or mixed labels that still fit.
-  - Avoid over-labeling because the charts are small.
-- [ ] If using sunrise/sunset markers on bottom charts, make them visually lighter than actual data.
-  - Use thin/dotted vertical markers.
-  - Consider pairing with midnight separators so sunrise/sunset does not have to carry all day-position meaning.
+  - Decision: keep rolling 72 hours and add noon/midnight markers.
+  - Do not add a "next rain" callout; the graph should be interpretable without doing the interpretation for the user.
+- [x] Add noon/midnight markers to the bottom charts.
+  - Midnight uses longer dashes; noon uses lighter dotted marks.
+- [ ] Review bottom chart x-axis labels after seeing the noon/midnight markers on-device.
+  - Keep labels minimal because the charts are small.
 
 ## Layout/UI Tweaks
 
@@ -68,17 +63,17 @@ Working branch: `codex/crowpanel-weather-tides`
 - [x] Keep the current-time marker on the tide chart.
 - [x] Update tide chart x-axis labels to `0:00`, `6:00`, `12:00`, `18:00` and drop the final `24`.
 - [x] Add thin dashed sunrise/sunset markers to the tide chart.
-- [ ] Review the middle-right panel spacing after the next live framebuffer capture.
-- [ ] Move the wind compass triangle back outward into the ring between the two compass circles.
+- [ ] Review the middle-right panel spacing after the next live framebuffer/physical check.
+- [x] Move the wind compass triangle back outward into the ring between the two compass circles.
   - Current position is too far inside.
   - Remove the numeric degree text from the middle; keep only text direction and wind speed.
-- [ ] Move the tide arrow down 2 px in the current tide status.
-- [ ] Center current temperature and high/low directly under the conditions icon.
+- [x] Move the tide arrow down 2 px in the current tide status.
+- [x] Center current temperature and high/low directly under the conditions icon.
   - Move humidity percentage out of that area.
   - Put humidity in the middle-right detail panel.
-- [ ] Preemptively shrink the precipitation value in the middle-right detail panel.
+- [x] Preemptively shrink the precipitation value in the middle-right detail panel.
   - We have not seen a meaningful precip value on-device yet, so leave extra room now.
-- [ ] Change the tide chart top-right value from current tide to max tide.
+- [x] Change the tide chart top-right value from current tide to max tide.
   - Current tide is already shown in the top-left tide status, so the chart should expose different information.
 
 ## Capture/Testing Workflow
