@@ -23,9 +23,11 @@
 #else
 #include "owm_credentials.h"        // Tracked placeholder credentials
 #endif
-#include "local_tides.h"      // Local tide table rendered in the right-side panel
+#define CROWPANEL_USE_OPEN_METEO 1
+#include "local_tides.h"      // Runtime NOAA tide table with local fallback samples
 #include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>              // Built-in
+#include <WiFiClientSecure.h>
 #include "time.h"              // Built-in
 #include <Adafruit_GFX.h>
 #include <U8g2_for_Adafruit_GFX.h>
@@ -97,6 +99,7 @@ int  WakeupTime    = 7;  // Don't wakeup until after 07:00 to save battery power
 int  SleepTime     = 23; // Sleep after (23+1) 00:00 to save battery power
 
 void LoadStaticPreviewData();
+bool ReceiveNoaaTidePredictions(bool print);
 
 //#########################################################################################
 void setup() {
@@ -122,6 +125,9 @@ void setup() {
         Attempts++;
       }
       if (RxWeather) { // Only if received both Weather or Forecast proceed
+        if (!ReceiveNoaaTidePredictions(true)) {
+          Serial.println("Using fallback local tide samples");
+        }
         StopWiFi(); // Reduces power consumption
         display.fillScreen(GxEPD_WHITE);
         DisplayWeather();
@@ -134,6 +140,69 @@ void setup() {
 }
 //#########################################################################################
 void loop() { // this will never run!
+}
+//#########################################################################################
+bool ReceiveNoaaTidePredictions(bool print) {
+  Serial.println("Rx NOAA tide predictions...");
+  WiFiClientSecure secure_client;
+  secure_client.setInsecure();
+  HTTPClient http;
+  String uri = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?date=today&station=" +
+               String(NOAA_TIDE_STATION) +
+               "&product=predictions&datum=MLLW&time_zone=lst_ldt&units=english&interval=60&format=json";
+  http.begin(secure_client, uri);
+  int httpCode = http.GET();
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("NOAA tide HTTP status: %d, error: %s\n", httpCode, http.errorToString(httpCode).c_str());
+    String response = http.getString();
+    if (response.length() > 0) Serial.println(response.substring(0, 240));
+    http.end();
+    return false;
+  }
+
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, http.getStream());
+  if (error) {
+    Serial.print("NOAA tide deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    http.end();
+    return false;
+  }
+
+  JsonArray predictions = doc["predictions"];
+  if (predictions.isNull() || predictions.size() == 0) {
+    Serial.println("NOAA tide response contained no predictions");
+    http.end();
+    return false;
+  }
+
+  int count = 0;
+  for (JsonObject prediction : predictions) {
+    if (count >= LocalTideSampleMax - 1) break;
+    String t = prediction["t"] | "";
+    if (t.length() < 16) continue;
+    int hour = t.substring(11, 13).toInt();
+    int minute = t.substring(14, 16).toInt();
+    LocalTideSamples[count].hour = hour + minute / 60.0;
+    LocalTideSamples[count].height_ft = String(prediction["v"] | "0").toFloat();
+    count++;
+  }
+
+  if (count > 0) {
+    LocalTideSampleCount = count;
+    if (LocalTideSamples[count - 1].hour < 24 && count < LocalTideSampleMax) {
+      LocalTideSamples[count].hour = 24;
+      LocalTideSamples[count].height_ft = LocalTideSamples[count - 1].height_ft;
+      LocalTideSampleCount++;
+    }
+  }
+
+  http.end();
+  if (print) {
+    Serial.println("NOAA tide station: " + String(NOAA_TIDE_STATION_NAME));
+    Serial.println("NOAA tide samples: " + String(LocalTideSampleCount));
+  }
+  return LocalTideSampleCount > 0;
 }
 //#########################################################################################
 void LoadStaticPreviewData() {
@@ -210,7 +279,10 @@ void DisplayWeather() {                 // 4.2" e-paper display is 400x300 resol
   DrawMainWeatherSection(172, 70);      // Centre section of display for Location, temperature, Weather report, current Wx Symbol and wind direction
   DrawForecastSection(233, 15);         // 3hr forecast boxes
   DisplayPrecipitationSection(233, 82); // Precipitation sectio
-  if (WxConditions[0].Visibility > 0) Visibility(335, 100, String(WxConditions[0].Visibility) + "M");
+  if (WxConditions[0].Visibility > 0) {
+    String visibility_text = Units == "M" ? String(WxConditions[0].Visibility) + "M" : String(WxConditions[0].Visibility / 5280.0, 1) + "mi";
+    Visibility(335, 100, visibility_text);
+  }
   if (WxConditions[0].Cloudcover > 0) CloudCover(350, 125, WxConditions[0].Cloudcover);
   DrawAstronomySection(233, 74);        // Middle-right Sun rise/set, Moon phase and Moon icon
 }
@@ -242,6 +314,10 @@ void DrawForecastSection(int x, int y) {
   DrawForecastWeather(x + 112, y, 2);
   //       (x,y,width,height,MinValue, MaxValue, Title, Data Array, AutoScale, ChartMode)
   for (int r = 0; r < max_readings; r++) {
+#if CROWPANEL_USE_OPEN_METEO
+    pressure_readings[r] = WxForecast[r].Pressure;
+    rain_readings[r]     = WxForecast[r].Rainfall;
+#else
     if (Units == "I") {
       pressure_readings[r] = WxForecast[r].Pressure * 0.02953;
       rain_readings[r]     = WxForecast[r].Rainfall * 0.0393701;
@@ -250,6 +326,7 @@ void DrawForecastSection(int x, int y) {
       pressure_readings[r] = WxForecast[r].Pressure;
       rain_readings[r]     = WxForecast[r].Rainfall;
     }
+#endif
     temperature_readings[r] = WxForecast[r].Temperature;
     wind_readings[r]        = WxForecast[r].Windspeed;
   }

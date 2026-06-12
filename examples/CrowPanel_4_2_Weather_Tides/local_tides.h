@@ -2,17 +2,24 @@
 #define LOCAL_TIDES_H
 
 struct LocalTideSample {
-  uint8_t hour;
+  float hour;
   float height_ft;
 };
 
-static const char LOCAL_TIDE_STATION[] = "Local";
-static const char LOCAL_TIDE_DATE[] = "Today";
+#ifndef NOAA_TIDE_STATION
+#define NOAA_TIDE_STATION "8638610"
+#endif
+
+#ifndef NOAA_TIDE_STATION_NAME
+#define NOAA_TIDE_STATION_NAME "Sewells Point"
+#endif
+
+static const int LocalTideSampleMax = 25;
 
 // Replace these values each day, or generate this file from a tide source.
 // Time should be local display time. Height is in feet.
 // Keep the final 24-hour point so interpolation works through the end of day.
-static const LocalTideSample LocalTideSamples[] = {
+static LocalTideSample LocalTideSamples[LocalTideSampleMax] = {
   {0, 1.2},
   {3, 0.4},
   {6, 3.8},
@@ -24,6 +31,6 @@ static const LocalTideSample LocalTideSamples[] = {
   {24, 1.4}
 };
 
-static const int LocalTideSampleCount = sizeof(LocalTideSamples) / sizeof(LocalTideSamples[0]);
+static int LocalTideSampleCount = 9;
 
 #endif

@@ -1,5 +1,5 @@
 {
-  "city": "NEW YORK",
+  "city": "NORFOLK",
   "time": "09:42",
   "date": "Tue 02-Jun-2026",
   "current_hour": 9,
@@ -15,7 +15,7 @@
     "wind_speed": 8.1,
     "wind_dir": 150,
     "icon": "04d",
-    "visibility": 10000,
+    "visibility": 10.0,
     "cloud_cover": 40,
     "rain_next": 0.0,
     "snow_next": 0.0,

@@ -1,4 +1,4 @@
-# CrowPanel 4.2 Weather + Local Tides
+# CrowPanel 4.2 Weather + NOAA Tides
 
 This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel ESP32-S3 4.2-inch E-Paper HMI Display.
 
@@ -13,11 +13,13 @@ This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel 
 - Replaces the current-condition description band with a 24-hour local tide graph.
 - Replaces the bottom-left 3-day pressure graph with a 3-day wind graph.
 - Keeps the middle-right sunrise/sunset/moon panel.
+- Uses Open-Meteo for no-key weather data.
+- Uses NOAA CO-OPS hourly tide predictions, with `local_tides.h` retained as an offline fallback.
 
 ## Setup
 
-1. Edit `owm_credentials.h` with Wi-Fi, OpenWeather One Call 3.0 API key, latitude, longitude, city label, units, and timezone.
-2. Edit `local_tides.h` with the day's hourly tide samples.
+1. Copy `owm_credentials_local.example.h` to `owm_credentials_local.h`.
+2. Edit `owm_credentials_local.h` with Wi-Fi, latitude, longitude, city label, units, timezone, and NOAA tide station.
 3. Arduino IDE board settings:
    - Board: `ESP32S3 Dev Module`
    - Flash size: `8MB`
@@ -26,11 +28,11 @@ This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel 
    - Upload speed: `115200`
 4. Upload over USB-C.
 
-The default refresh is 30 minutes. Keep it at 15 minutes or slower unless you have intentionally raised your OpenWeather One Call usage limit.
+The default refresh is 30 minutes. Open-Meteo's free API is for non-commercial use and is far above this display's refresh rate. NOAA CO-OPS is also queried once per refresh for hourly tide predictions.
 
 ## Static Panel Test
 
-Before testing Wi-Fi and OpenWeather credentials, flash the static preview environment:
+Before testing Wi-Fi and live API fetches, flash the static preview environment:
 
 ```sh
 ../../.venv-platformio/bin/platformio run -e esp32s3_static -t upload
@@ -40,10 +42,17 @@ This uses deterministic sample weather values and the local tide table, then ref
 
 ## Tide Data
 
-`local_tides.h` is intentionally simple for the first build. The 24-hour tide graph and current tide status use `LocalTideSamples`:
+The live sketch fetches hourly NOAA CO-OPS tide predictions for the station in `NOAA_TIDE_STATION`. The default is Sewells Point, VA:
 
 ```cpp
-static const LocalTideSample LocalTideSamples[] = {
+#define NOAA_TIDE_STATION "8638610"
+#define NOAA_TIDE_STATION_NAME "Sewells Point"
+```
+
+`local_tides.h` remains as a fallback if NOAA is unavailable. The 24-hour tide graph and current tide status use `LocalTideSamples`:
+
+```cpp
+static LocalTideSample LocalTideSamples[LocalTideSampleMax] = {
   {0, 1.2},
   {3, 0.4},
   {6, 3.8},
@@ -56,9 +65,19 @@ static const LocalTideSample LocalTideSamples[] = {
 };
 ```
 
-Once the display is working, this can be replaced by a generated file, an SD-card file, or an API fetch from a tide source.
-
 Include a final `{24, ...}` sample so the interpolation works cleanly through the end of the day.
+
+## Weather Data
+
+Weather comes from Open-Meteo's forecast API and does not require an API key. The firmware requests current, hourly, and daily fields, then maps WMO weather codes to the OpenWeather-style icon names already used by the original drawing code.
+
+For Norfolk, the tracked template uses:
+
+```cpp
+String LAT              = "36.8508";
+String LON              = "-76.2859";
+#define OPEN_METEO_TIMEZONE "America%2FNew_York"
+```
 
 ## Layout Preview
 

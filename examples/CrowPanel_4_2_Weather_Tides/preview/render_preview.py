@@ -77,18 +77,18 @@ class Canvas:
         self.line((x, y, x + w, y))
 
 
-def parse_tide_samples(path: Path) -> list[tuple[int, float]]:
+def parse_tide_samples(path: Path) -> list[tuple[float, float]]:
     text = path.read_text()
-    match = re.search(r"LocalTideSamples\[\]\s*=\s*\{(?P<body>.*?)\};", text, re.S)
+    match = re.search(r"LocalTideSamples\[[^\]]*\]\s*=\s*\{(?P<body>.*?)\};", text, re.S)
     if not match:
         return []
-    samples: list[tuple[int, float]] = []
-    for hour, height in re.findall(r"\{\s*(\d+)\s*,\s*([0-9.]+)\s*\}", match.group("body")):
-        samples.append((int(hour), float(height)))
+    samples: list[tuple[float, float]] = []
+    for hour, height in re.findall(r"\{\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\}", match.group("body")):
+        samples.append((float(hour), float(height)))
     return samples
 
 
-def tide_height_at_hour(samples: list[tuple[int, float]], hour: float) -> float:
+def tide_height_at_hour(samples: list[tuple[float, float]], hour: float) -> float:
     if not samples:
         return 0.0
     if hour <= samples[0][0]:
@@ -292,7 +292,8 @@ def draw_precipitation(c: Canvas, data: dict) -> None:
     else:
         c.text(x + 5, y + 15, "0.00in" if data["units"] == "I" else "0.00mm", "B10")
     if w["visibility"] > 0:
-        draw_visibility(c, 335, 100, f"{w['visibility']}M")
+        visibility = f"{w['visibility']:.0f}M" if data["units"] == "M" else f"{w['visibility']:.1f}mi"
+        draw_visibility(c, 335, 100, visibility)
     if w["cloud_cover"] > 0:
         draw_cloud_cover(c, 350, 125, w["cloud_cover"])
 
