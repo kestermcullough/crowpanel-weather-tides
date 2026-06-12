@@ -211,16 +211,16 @@ String ForecastTimeLabel(int unix_time) {
   return String(output);
 }
 //#########################################################################################
-String FormatVisibility(int visibility_meters) {
-  if (visibility_meters <= 0) return "--";
+String FormatVisibility(int visibility_distance) {
+  if (visibility_distance <= 0) return "NA";
   if (Units == "M") {
-    if (visibility_meters >= 1000) {
-      float km = visibility_meters / 1000.0;
+    if (visibility_distance >= 1000) {
+      float km = visibility_distance / 1000.0;
       return String(km, km >= 10 ? 0 : 1) + "km";
     }
-    return String(visibility_meters) + "m";
+    return String(visibility_distance) + "m";
   }
-  float miles = visibility_meters / 1609.344;
+  float miles = visibility_distance / 5280.0;
   return String(miles, miles >= 10 ? 0 : 1) + "mi";
 }
 //#########################################################################################
@@ -718,9 +718,15 @@ void DisplayPrecipitationSection(int x, int y) {
   const String precip_text = String(precip, precip >= 1 ? 1 : 2) + precip_units;
   addraindrop(x + 15, y + 16, 5);
   drawString(x + 29, y + 6, precip_text, LEFT);
+
+  SetUIFont(UI_FONT_10);
   drawString(x + 8, y + 30, String(WxConditions[0].Humidity, 0) + "%", LEFT);
 
-  drawString(x + 86, y + 7, "Vis " + FormatVisibility(WxConditions[0].Visibility), LEFT);
+  SetUIFont(UI_FONT_08);
+  drawString(x + 78, y + 5, "VIS", LEFT);
+  SetUIFont(UI_FONT_10);
+  drawString(x + 78, y + 22, FormatVisibility(WxConditions[0].Visibility), LEFT);
+
   CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
 }
 void DrawAstronomySection(int x, int y) {
@@ -1145,7 +1151,7 @@ void CloudCover(int x, int y, int CCover) {
   addcloud(x - 9, y - 3, Small * 0.5, 2); // Cloud top left
   addcloud(x + 3, y - 3, Small * 0.5, 2); // Cloud top right
   addcloud(x, y,         Small * 0.5, 2); // Main cloud
-  SetUIFont(UI_FONT_08);
+  SetUIFont(UI_FONT_10);
   drawString(x + 15, y - 5, String(CCover) + "%", LEFT);
 }
 //#########################################################################################

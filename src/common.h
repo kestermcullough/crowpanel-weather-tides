@@ -217,7 +217,7 @@ bool DecodeOpenMeteoWeather(const String& json, bool print) {
   WxConditions[0].Humidity    = current["relative_humidity_2m"] | 0.0;
   WxConditions[0].DewPoint    = 0;
   WxConditions[0].Cloudcover  = current["cloud_cover"] | 0;
-  WxConditions[0].Visibility  = current["visibility"] | 0;
+  WxConditions[0].Visibility  = int((current["visibility"] | 0.0) + 0.5);
   WxConditions[0].Windspeed   = current["wind_speed_10m"] | 0.0;
   WxConditions[0].Winddir     = current["wind_direction_10m"] | 0.0;
   WxConditions[0].Rainfall    = current["rain"] | current["precipitation"] | 0.0;
@@ -247,7 +247,7 @@ bool DecodeOpenMeteoWeather(const String& json, bool print) {
     WxForecast[r].Humidity    = hourly_humidity[r] | 0.0;
     WxForecast[r].DewPoint    = hourly_dew[r] | 0.0;
     WxForecast[r].Pressure    = hourly_pressure[r] | 0.0;
-    WxForecast[r].Visibility  = hourly_visibility[r] | 0;
+    WxForecast[r].Visibility  = int((hourly_visibility[r] | 0.0) + 0.5);
     WxForecast[r].Windspeed   = hourly_wind[r] | 0.0;
     WxForecast[r].Winddir     = hourly_wind_dir[r] | 0.0;
     WxForecast[r].Rainfall    = hourly_rain[r] | hourly_precip[r] | 0.0;
@@ -256,8 +256,13 @@ bool DecodeOpenMeteoWeather(const String& json, bool print) {
     WxForecast[r].Icon        = OpenMeteoIcon(weather_code);
     WxForecast[r].Description = OpenMeteoDescription(weather_code);
   }
-  if (WxConditions[0].Visibility <= 0 && hourly_count > 0) {
-    WxConditions[0].Visibility = WxForecast[0].Visibility;
+  if (WxConditions[0].Visibility <= 0) {
+    for (int r = 0; r < hourly_count; r++) {
+      if (WxForecast[r].Visibility > 0) {
+        WxConditions[0].Visibility = WxForecast[r].Visibility;
+        break;
+      }
+    }
   }
   if (WxConditions[0].Cloudcover <= 0 && hourly_count > 0) {
     WxConditions[0].Cloudcover = WxForecast[0].Cloudcover;
