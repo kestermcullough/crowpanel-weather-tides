@@ -1,3 +1,4 @@
 .venv-platformio/
 .pio/
 examples/*/.pio/
+examples/CrowPanel_4_2_Weather_Tides/owm_credentials_local.h

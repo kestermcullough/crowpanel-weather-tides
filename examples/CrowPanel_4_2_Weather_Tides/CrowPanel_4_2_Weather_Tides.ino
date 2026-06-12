@@ -18,7 +18,11 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   See more at http://www.dsbird.org.uk
 */
-#include "owm_credentials.h"  // See 'owm_credentials' tab and enter your OWM API key and set the Wifi SSID and PASSWORD
+#if __has_include("owm_credentials_local.h")
+#include "owm_credentials_local.h"  // Local, ignored credentials override
+#else
+#include "owm_credentials.h"        // Tracked placeholder credentials
+#endif
 #include "local_tides.h"      // Local tide table rendered in the right-side panel
 #include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson
 #include <WiFi.h>              // Built-in
