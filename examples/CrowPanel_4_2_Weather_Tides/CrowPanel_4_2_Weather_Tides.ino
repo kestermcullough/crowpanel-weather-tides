@@ -552,7 +552,7 @@ void DrawMainWx(int x, int y) {
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
-  arrow(x, y, 6, angle, 8, 10); // Show wind direction between the compass rings
+  arrow(x, y, int(Cradius * 0.7) + 2, angle, 9, Cradius - 2); // Show wind direction between the compass rings
   SetUIFont(UI_FONT_08);
   int dxo, dyo, dxi, dyi;
   display.drawLine(0, 15, 0, y + Cradius + 30, GxEPD_BLACK);
@@ -673,7 +673,7 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 
   SetUIFont(UI_FONT_08);
   drawString(x + 6, y + 2, "24h Tide", LEFT);
-  drawString(x + w - 6, y + 2, String(max_height, 1) + "ft max", RIGHT);
+  drawString(x + w - 6, y + 2, String(max_height, 1) + "ft", RIGHT);
   display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
 
   int last_x = graph_x;
@@ -715,7 +715,7 @@ void DisplayPrecipitationSection(int x, int y) {
   const String precip_text = String(precip, precip >= 1 ? 1 : 2) + precip_units;
   addraindrop(x + 15, y + 16, 5);
   drawString(x + 29, y + 6, precip_text, LEFT);
-  drawString(x + 8, y + 30, "RH " + String(WxConditions[0].Humidity, 0) + "%", LEFT);
+  drawString(x + 8, y + 30, String(WxConditions[0].Humidity, 0) + "%", LEFT);
 
   Visibility(x + 112, y + 17, FormatVisibility(WxConditions[0].Visibility));
   CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
@@ -801,19 +801,25 @@ String MoonPhase(int d, int m, int y) {
 }
 //#########################################################################################
 void arrow(int x, int y, int asize, float aangle, int pwidth, int plength) {
-  float dx = (asize + 28) * cos((aangle - 90) * PI / 180) + x; // calculate X position
-  float dy = (asize + 28) * sin((aangle - 90) * PI / 180) + y; // calculate Y position
-  float x1 = 0;           float y1 = plength;
-  float x2 = pwidth / 2;  float y2 = pwidth / 2;
-  float x3 = -pwidth / 2; float y3 = pwidth / 2;
-  float angle = aangle * PI / 180;
-  float xx1 = x1 * cos(angle) - y1 * sin(angle) + dx;
-  float yy1 = y1 * cos(angle) + x1 * sin(angle) + dy;
-  float xx2 = x2 * cos(angle) - y2 * sin(angle) + dx;
-  float yy2 = y2 * cos(angle) + x2 * sin(angle) + dy;
-  float xx3 = x3 * cos(angle) - y3 * sin(angle) + dx;
-  float yy3 = y3 * cos(angle) + x3 * sin(angle) + dy;
-  display.fillTriangle(xx1, yy1, xx3, yy3, xx2, yy2, GxEPD_BLACK);
+  const float angle = aangle * PI / 180.0;
+  const float ux = sin(angle);
+  const float uy = -cos(angle);
+  const float px = cos(angle);
+  const float py = sin(angle);
+  const float outer_radius = plength;
+  const float inner_radius = asize;
+  const float half_width = pwidth / 2.0;
+
+  const int tip_x = round(x + ux * outer_radius);
+  const int tip_y = round(y + uy * outer_radius);
+  const float base_x = x + ux * inner_radius;
+  const float base_y = y + uy * inner_radius;
+  const int base_left_x = round(base_x + px * half_width);
+  const int base_left_y = round(base_y + py * half_width);
+  const int base_right_x = round(base_x - px * half_width);
+  const int base_right_y = round(base_y - py * half_width);
+
+  display.fillTriangle(tip_x, tip_y, base_left_x, base_left_y, base_right_x, base_right_y, GxEPD_BLACK);
 }
 //#########################################################################################
 void DisplayWXicon(int x, int y, String IconName, bool IconSize) {
