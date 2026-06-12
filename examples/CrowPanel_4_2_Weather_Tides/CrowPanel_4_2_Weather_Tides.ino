@@ -719,13 +719,10 @@ void DisplayPrecipitationSection(int x, int y) {
   addraindrop(x + 15, y + 16, 5);
   drawString(x + 29, y + 6, precip_text, LEFT);
 
-  SetUIFont(UI_FONT_10);
+  SetUIFont(UI_FONT_12);
   drawString(x + 8, y + 30, String(WxConditions[0].Humidity, 0) + "%", LEFT);
 
-  SetUIFont(UI_FONT_08);
-  drawString(x + 78, y + 5, "VIS", LEFT);
-  SetUIFont(UI_FONT_10);
-  drawString(x + 78, y + 22, FormatVisibility(WxConditions[0].Visibility), LEFT);
+  Visibility(x + 86, y + 17, FormatVisibility(WxConditions[0].Visibility));
 
   CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
 }
@@ -1151,7 +1148,7 @@ void CloudCover(int x, int y, int CCover) {
   addcloud(x - 9, y - 3, Small * 0.5, 2); // Cloud top left
   addcloud(x + 3, y - 3, Small * 0.5, 2); // Cloud top right
   addcloud(x, y,         Small * 0.5, 2); // Main cloud
-  SetUIFont(UI_FONT_10);
+  SetUIFont(UI_FONT_12);
   drawString(x + 15, y - 5, String(CCover) + "%", LEFT);
 }
 //#########################################################################################
@@ -1169,7 +1166,7 @@ void Visibility(int x, int y, String Visi) {
     display.drawPixel(x + r * cos(i), 1 + y + r / 2 + r * sin(i), GxEPD_BLACK);
   }
   display.fillCircle(x, y, r / 4, GxEPD_BLACK);
-  SetUIFont(UI_FONT_08);
+  SetUIFont(UI_FONT_10);
   drawString(x + 12, y - 3, Visi, LEFT);
 }
 //#########################################################################################
