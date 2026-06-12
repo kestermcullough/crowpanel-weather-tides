@@ -1307,31 +1307,30 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
 }
 //#########################################################################################
 void drawString(int x, int y, String text, alignment align) {
-  int16_t  x1, y1; //the bounds of x,y and w and h of the variable 'text' in pixels.
-  uint16_t w, h;
   display.setTextWrap(false);
-  display.getTextBounds(text, x, y, &x1, &y1, &w, &h);
+  int16_t w = u8g2Fonts.getUTF8Width(text.c_str());
+  int16_t ascent = u8g2Fonts.getFontAscent();
   if (align == RIGHT)  x = x - w;
   if (align == CENTER) x = x - w / 2;
-  u8g2Fonts.setCursor(x, y + h);
+  u8g2Fonts.setCursor(x, y + ascent);
   u8g2Fonts.print(text);
 }
 //#########################################################################################
 void drawStringMaxWidth(int x, int y, unsigned int text_width, String text, alignment align) {
-  int16_t  x1, y1; //the bounds of x,y and w and h of the variable 'text' in pixels.
-  uint16_t w, h;
-  display.getTextBounds(text, x, y, &x1, &y1, &w, &h);
+  int16_t w = u8g2Fonts.getUTF8Width(text.c_str());
+  int16_t line_height = u8g2Fonts.getFontAscent() - u8g2Fonts.getFontDescent() + 2;
   if (align == RIGHT)  x = x - w;
   if (align == CENTER) x = x - w / 2;
-  u8g2Fonts.setCursor(x, y);
+  u8g2Fonts.setCursor(x, y + u8g2Fonts.getFontAscent());
   if (text.length() > text_width * 2) {
     SetUIFont(UI_FONT_10);
+    line_height = u8g2Fonts.getFontAscent() - u8g2Fonts.getFontDescent() + 2;
     text_width = 42;
     y = y - 3;
   }
   u8g2Fonts.println(text.substring(0, text_width));
   if (text.length() > text_width) {
-    u8g2Fonts.setCursor(x, y + h + 15);
+    u8g2Fonts.setCursor(x, y + line_height + u8g2Fonts.getFontAscent());
     String secondLine = text.substring(text_width);
     secondLine.trim(); // Remove any leading spaces
     u8g2Fonts.println(secondLine);
