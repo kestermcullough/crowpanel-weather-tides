@@ -57,7 +57,7 @@ Forecast_record_type  Daily[8];
 
 bool ReceiveOneCallWeather(WiFiClient& client, bool print);
 #if CROWPANEL_USE_OPEN_METEO
-bool DecodeOpenMeteoWeather(Stream& json, bool print);
+bool DecodeOpenMeteoWeather(const String& json, bool print);
 #else
 bool DecodeOneCallWeather(WiFiClient& json, bool print);
 #endif
@@ -100,9 +100,11 @@ bool ReceiveOneCallWeather(WiFiClient& client, bool print) {
   client.stop();
   HTTPClient http;
   http.begin(client, "api.open-meteo.com", 80, OpenMeteoForecastUri());
+  http.useHTTP10(true);
   int httpCode = http.GET();
   if (httpCode == HTTP_CODE_OK) {
-    bool decoded = DecodeOpenMeteoWeather(http.getStream(), print);
+    String response = http.getString();
+    bool decoded = DecodeOpenMeteoWeather(response, print);
     client.stop();
     http.end();
     return decoded;
@@ -193,13 +195,14 @@ String OpenMeteoDescription(int weather_code) {
   return "Forecast";
 }
 //#######################################################################################
-bool DecodeOpenMeteoWeather(Stream& json, bool print) {
+bool DecodeOpenMeteoWeather(const String& json, bool print) {
   if (print) Serial.println("Decoding Open-Meteo data...");
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, json);
   if (error) {
     Serial.print("deserializeJson() failed: ");
     Serial.println(error.c_str());
+    Serial.println(json.substring(0, 120));
     return false;
   }
 

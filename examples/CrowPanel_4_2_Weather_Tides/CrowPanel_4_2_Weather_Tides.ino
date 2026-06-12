@@ -151,6 +151,7 @@ bool ReceiveNoaaTidePredictions(bool print) {
                String(NOAA_TIDE_STATION) +
                "&product=predictions&datum=MLLW&time_zone=lst_ldt&units=english&interval=60&format=json";
   http.begin(secure_client, uri);
+  http.useHTTP10(true);
   int httpCode = http.GET();
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("NOAA tide HTTP status: %d, error: %s\n", httpCode, http.errorToString(httpCode).c_str());
@@ -161,10 +162,12 @@ bool ReceiveNoaaTidePredictions(bool print) {
   }
 
   JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, http.getStream());
+  String response = http.getString();
+  DeserializationError error = deserializeJson(doc, response);
   if (error) {
     Serial.print("NOAA tide deserializeJson() failed: ");
     Serial.println(error.c_str());
+    Serial.println(response.substring(0, 120));
     http.end();
     return false;
   }
