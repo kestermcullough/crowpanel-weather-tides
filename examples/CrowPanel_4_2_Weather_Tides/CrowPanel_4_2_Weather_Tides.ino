@@ -711,20 +711,29 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 //#########################################################################################
 void DisplayPrecipitationSection(int x, int y) {
   display.drawRect(x, y - 1, 167, 56, GxEPD_BLACK);
-  SetUIFont(UI_FONT_08);
+  SetUIFont(UI_FONT_12);
 
   const float precip = WxForecast[1].Rainfall;
   const String precip_units = Units == "M" ? "mm" : "in";
   const String precip_text = String(precip, precip >= 1 ? 1 : 2) + precip_units;
-  addraindrop(x + 15, y + 16, 5);
-  drawString(x + 29, y + 6, precip_text, LEFT);
+  const int left_icon_x = x + 17;
+  const int left_text_x = x + 33;
+  const int right_icon_x = x + 104;
+  const int right_text_x = x + 119;
+  const int top_icon_y = y + 14;
+  const int top_text_y = y + 5;
+  const int bottom_icon_y = y + 39;
+  const int bottom_text_y = y + 33;
 
-  SetUIFont(UI_FONT_12);
-  drawString(x + 8, y + 30, String(WxConditions[0].Humidity, 0) + "%", LEFT);
+  addraindrop(left_icon_x - 3, top_icon_y - 1, 4);
+  drawString(left_text_x, top_text_y, precip_text, LEFT);
 
-  Visibility(x + 86, y + 17, FormatVisibility(WxConditions[0].Visibility));
+  Visibility(right_icon_x, top_icon_y + 1, FormatVisibility(WxConditions[0].Visibility));
 
-  CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
+  Humidity(left_icon_x, bottom_icon_y);
+  drawString(left_text_x, bottom_text_y, String(WxConditions[0].Humidity, 0) + "%", LEFT);
+
+  CloudCover(right_icon_x, bottom_icon_y + 1, WxConditions[0].Cloudcover, right_text_x, bottom_text_y);
 }
 void DrawAstronomySection(int x, int y) {
   SetUIFont(UI_FONT_08);
@@ -1144,16 +1153,20 @@ void Haze(int x, int y, bool IconSize, String IconName) {
   addfog(x, y - 5, scale * 1.4, linesize, IconSize);
 }
 //#########################################################################################
-void CloudCover(int x, int y, int CCover) {
+void CloudCover(int x, int y, int CCover, int text_x, int text_y) {
   addcloud(x - 9, y - 3, Small * 0.5, 2); // Cloud top left
   addcloud(x + 3, y - 3, Small * 0.5, 2); // Cloud top right
   addcloud(x, y,         Small * 0.5, 2); // Main cloud
   SetUIFont(UI_FONT_12);
-  drawString(x + 15, y - 5, String(CCover) + "%", LEFT);
+  drawString(text_x, text_y, String(CCover) + "%", LEFT);
+}
+//#########################################################################################
+void Humidity(int x, int y) {
+  display.fillCircle(x, y + 2, 4, GxEPD_BLACK);
+  display.fillTriangle(x - 4, y + 2, x, y - 8, x + 4, y + 2, GxEPD_BLACK);
 }
 //#########################################################################################
 void Visibility(int x, int y, String Visi) {
-  y = y - 3; //
   float start_angle = 0.52, end_angle = 2.61;
   int r = 10;
   for (float i = start_angle; i < end_angle; i = i + 0.05) {
@@ -1166,8 +1179,8 @@ void Visibility(int x, int y, String Visi) {
     display.drawPixel(x + r * cos(i), 1 + y + r / 2 + r * sin(i), GxEPD_BLACK);
   }
   display.fillCircle(x, y, r / 4, GxEPD_BLACK);
-  SetUIFont(UI_FONT_10);
-  drawString(x + 12, y - 3, Visi, LEFT);
+  SetUIFont(UI_FONT_12);
+  drawString(x + 14, y - 9, Visi, LEFT);
 }
 //#########################################################################################
 void addmoon(int x, int y, int scale, bool IconSize) {
