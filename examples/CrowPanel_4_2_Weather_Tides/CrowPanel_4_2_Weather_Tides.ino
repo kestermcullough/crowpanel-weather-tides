@@ -314,11 +314,11 @@ const uint8_t* FontGalleryFont(UIFontSize size) {
       return u8g2_font_fub25_tf;
   }
 #endif
-  if (size == UI_FONT_08) return u8g2_font_profont10_tf;
-  if (size == UI_FONT_10) return u8g2_font_profont11_tf;
-  if (size == UI_FONT_12) return u8g2_font_profont12_tf;
-  if (size == UI_FONT_14) return u8g2_font_profont17_tf;
-  return u8g2_font_profont22_tf;
+  if (size == UI_FONT_08) return u8g2_font_profont11_tf;
+  if (size == UI_FONT_10) return u8g2_font_profont12_tf;
+  if (size == UI_FONT_12) return u8g2_font_profont15_tf;
+  if (size == UI_FONT_14) return u8g2_font_profont22_tf;
+  return u8g2_font_profont29_tf;
 }
 //#########################################################################################
 void SetUIFont(UIFontSize size) {

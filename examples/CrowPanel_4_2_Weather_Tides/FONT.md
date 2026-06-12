@@ -15,11 +15,11 @@ X11 9x15 looked promising in the framebuffer gallery but was too large on the ph
 
 The normal firmware is currently mapped to ProFont for a comparison pass:
 
-- `UI_FONT_08`: `u8g2_font_profont10_tf`
-- `UI_FONT_10`: `u8g2_font_profont11_tf`
-- `UI_FONT_12`: `u8g2_font_profont12_tf`
-- `UI_FONT_14`: `u8g2_font_profont17_tf`
-- `UI_FONT_24`: `u8g2_font_profont22_tf`
+- `UI_FONT_08`: `u8g2_font_profont11_tf`
+- `UI_FONT_10`: `u8g2_font_profont12_tf`
+- `UI_FONT_12`: `u8g2_font_profont15_tf`
+- `UI_FONT_14`: `u8g2_font_profont22_tf`
+- `UI_FONT_24`: `u8g2_font_profont29_tf`
 
 Switching between families is centralized in `FontGalleryFont()` / `SetUIFont()`.
 
