@@ -544,7 +544,7 @@ void DrawForecastWeather(int x, int y, int index) {
   display.drawLine(x + 1, y + 13, x + 54, y + 13, GxEPD_BLACK);
   DisplayWXicon(x + 28, y + 35, WxForecast[forecast_index].Icon, SmallIcon);
   drawString(x + 31, y + 3, ForecastTimeLabel(WxForecast[forecast_index].Dt), CENTER);
-  drawString(x + 41, y + 52, String(WxForecast[forecast_index].Temperature, 0) + "° / " + String(WxForecast[forecast_index].FeelsLike, 0) + "°", CENTER);
+  drawString(x + 28, y + 52, String(WxForecast[forecast_index].Temperature, 0) + "° / " + String(WxForecast[forecast_index].FeelsLike, 0) + "°", CENTER);
 }
 //#########################################################################################
 void DrawMainWx(int x, int y) {
