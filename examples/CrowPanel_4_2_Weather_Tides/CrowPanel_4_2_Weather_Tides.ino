@@ -1258,6 +1258,10 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   SetUIFont(UI_FONT_08);
   drawString(x_pos + gwidth / 2, y_pos - 13, title, CENTER);
   DrawNoonMidnightMarkers(x_pos, y_pos, gwidth, gheight);
+  for (int hour = 1; hour < 72; hour++) {
+    int tick_x = x_pos + int(hour * gwidth / 72.0);
+    display.drawFastVLine(tick_x, y_pos + gheight - 2, 3, GxEPD_BLACK);
+  }
   // Draw the data
   for (int gx = 0; gx < readings; gx++) {
     y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;
@@ -1296,7 +1300,10 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   for (int i = 0; i <= 3; i++) {
     drawString(x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(i), CENTER);
   }
-  drawString(x_pos + gwidth / 2, y_pos + gheight + 10, TXT_DAYS, CENTER);
+  String days_label = TXT_DAYS;
+  days_label.replace("(", "");
+  days_label.replace(")", "");
+  drawString(x_pos + gwidth / 2, y_pos + gheight + 10, days_label, CENTER);
 }
 //#########################################################################################
 void drawString(int x, int y, String text, alignment align) {
