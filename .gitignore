@@ -3,6 +3,7 @@
 examples/*/.pio/
 examples/CrowPanel_4_2_Weather_Tides/owm_credentials_local.h
 examples/CrowPanel_4_2_Weather_Tides/preview/framebuffer-capture*.png
+examples/CrowPanel_4_2_Weather_Tides/preview/font-gallery*.png
 __pycache__/
 */__pycache__/
 */*/__pycache__/

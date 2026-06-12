@@ -84,8 +84,9 @@ def scale_rows(rows: list[bytearray], scale: int) -> list[bytearray]:
     return scaled
 
 
-def capture(port: str, baud: int, timeout: float, reset: bool, quiet: bool) -> tuple[dict[str, str], bytes]:
+def capture_all(port: str, baud: int, timeout: float, reset: bool, quiet: bool) -> list[tuple[dict[str, str], bytes]]:
     redactions = load_redactions()
+    captures: list[tuple[dict[str, str], bytes]] = []
     with serial.Serial(port, baud, timeout=0.25) as ser:
         if reset:
             ser.dtr = False
@@ -118,10 +119,18 @@ def capture(port: str, baud: int, timeout: float, reset: bool, quiet: bool) -> t
                     if not quiet:
                         print(line)
                     continue
+                if line.startswith("FB_GALLERY_END") and captures:
+                    if not quiet:
+                        print(line)
+                    return captures
                 if line.startswith("FB_DUMP_END") and collecting:
                     if not quiet:
                         print(line)
-                    return metadata or {}, bytes.fromhex("".join(hex_lines))
+                    captures.append((metadata or {}, bytes.fromhex("".join(hex_lines))))
+                    metadata = None
+                    hex_lines = []
+                    collecting = False
+                    continue
                 if collecting:
                     if re.fullmatch(r"[0-9A-Fa-f]+", line):
                         hex_lines.append(line)
@@ -129,7 +138,18 @@ def capture(port: str, baud: int, timeout: float, reset: bool, quiet: bool) -> t
                 if not quiet:
                     print(scrub(line, redactions))
 
+    if captures:
+        return captures
     raise TimeoutError(f"no complete FB_DUMP block received from {port} within {timeout:.0f}s")
+
+
+def capture(port: str, baud: int, timeout: float, reset: bool, quiet: bool) -> tuple[dict[str, str], bytes]:
+    return capture_all(port, baud, timeout, reset, quiet)[0]
+
+
+def safe_label(label: str) -> str:
+    label = re.sub(r"[^A-Za-z0-9._-]+", "-", label.strip())
+    return label or "framebuffer"
 
 
 def main() -> None:
@@ -139,21 +159,29 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=120)
     parser.add_argument("--output", type=Path, default=ROOT / "preview" / "framebuffer-capture.png")
     parser.add_argument("--scale", type=int, default=2)
+    parser.add_argument("--all", action="store_true", help="capture every FB_DUMP block before timeout and write one PNG per label")
     parser.add_argument("--no-reset", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 
-    metadata, data = capture(args.port, args.baud, args.timeout, not args.no_reset, args.quiet)
-    width = int(metadata.get("width", "400"))
-    height = int(metadata.get("height", "300"))
-    rows = framebuffer_to_pixels(data, width, height)
+    captures = capture_all(args.port, args.baud, args.timeout, not args.no_reset, args.quiet) if args.all else [capture(args.port, args.baud, args.timeout, not args.no_reset, args.quiet)]
+    for index, (metadata, data) in enumerate(captures):
+        width = int(metadata.get("width", "400"))
+        height = int(metadata.get("height", "300"))
+        rows = framebuffer_to_pixels(data, width, height)
 
-    raw_output = args.output.with_name(args.output.stem + "-raw-1bit" + args.output.suffix)
-    write_png(raw_output, rows, width, height)
-    write_png(args.output, scale_rows(rows, args.scale), width * args.scale, height * args.scale)
+        if args.all:
+            label = safe_label(metadata.get("label", f"framebuffer-{index + 1:02d}"))
+            output = args.output.with_name(f"{args.output.stem}-{index + 1:02d}-{label}{args.output.suffix}")
+        else:
+            output = args.output
 
-    print(f"wrote {raw_output}")
-    print(f"wrote {args.output}")
+        raw_output = output.with_name(output.stem + "-raw-1bit" + output.suffix)
+        write_png(raw_output, rows, width, height)
+        write_png(output, scale_rows(rows, args.scale), width * args.scale, height * args.scale)
+
+        print(f"wrote {raw_output}")
+        print(f"wrote {output}")
 
 
 if __name__ == "__main__":

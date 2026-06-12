@@ -55,7 +55,12 @@
 #define CROWPANEL_FRAMEBUFFER_DUMP 0
 #endif
 
+#ifndef CROWPANEL_FONT_GALLERY
+#define CROWPANEL_FONT_GALLERY 0
+#endif
+
 enum alignment {LEFT, RIGHT, CENTER};
+enum UIFontSize {UI_FONT_08, UI_FONT_10, UI_FONT_12, UI_FONT_14, UI_FONT_24};
 
 GFXcanvas1 display(CrowPanelEPD::WIDTH, CrowPanelEPD::HEIGHT);
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;  // Select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
@@ -82,7 +87,8 @@ bool    DisplayInitialised = false;
 
 //################ PROGRAM VARIABLES and OBJECTS ################
 
-#define max_readings 24
+#define max_readings 72
+#define graph_readings 24
 
 #include <common.h>
 
@@ -101,17 +107,35 @@ float wind_readings[max_readings]        = {0};
 long SleepDuration = 30; // Sleep time in minutes, aligned to the nearest minute boundary, so if 30 will always update at 00 or 30 past the hour
 int  WakeupTime    = 7;  // Don't wakeup until after 07:00 to save battery power
 int  SleepTime     = 23; // Sleep after (23+1) 00:00 to save battery power
+int  FontGalleryIndex = 0;
 
 void LoadStaticPreviewData();
 bool ReceiveNoaaTidePredictions(bool print);
 void DumpFramebuffer(const char* label);
+float UnixLocalHour(int unix_time);
+String ForecastTimeLabel(int unix_time);
+String FormatVisibility(int visibility_meters);
+void SetUIFont(UIFontSize size);
+const char* FontGalleryLabel();
+int FontGalleryCount();
 
 //#########################################################################################
 void setup() {
   StartTime = millis();
   Serial.begin(115200);
   CrowPanelEPD::powerOff();
-#if CROWPANEL_STATIC_PREVIEW
+#if CROWPANEL_FONT_GALLERY
+  Serial.println("Running CrowPanel font gallery preview");
+  LoadStaticPreviewData();
+  InitialiseDisplay();
+  for (FontGalleryIndex = 0; FontGalleryIndex < FontGalleryCount(); FontGalleryIndex++) {
+    display.fillScreen(GxEPD_WHITE);
+    DisplayWeather();
+    DumpFramebuffer(FontGalleryLabel());
+  }
+  Serial.println("FB_GALLERY_END");
+  CrowPanelEPD::powerOff();
+#elif CROWPANEL_STATIC_PREVIEW
   Serial.println("Running static weather/tide panel preview");
   LoadStaticPreviewData();
   InitialiseDisplay();
@@ -165,6 +189,136 @@ void DumpFramebuffer(const char* label) {
 #else
   (void)label;
 #endif
+}
+//#########################################################################################
+float UnixLocalHour(int unix_time) {
+  time_t tm = unix_time + WxConditions[0].Timezone;
+  struct tm *timeinfo = gmtime(&tm);
+  return timeinfo->tm_hour + timeinfo->tm_min / 60.0;
+}
+//#########################################################################################
+String ForecastTimeLabel(int unix_time) {
+  time_t tm = unix_time + WxConditions[0].Timezone;
+  struct tm *timeinfo = gmtime(&tm);
+  char output[10];
+  if (Units == "M") {
+    strftime(output, sizeof(output), "%H:%M", timeinfo);
+  }
+  else {
+    strftime(output, sizeof(output), "%I  %P", timeinfo);
+  }
+  return String(output);
+}
+//#########################################################################################
+String FormatVisibility(int visibility_meters) {
+  if (visibility_meters <= 0) return "--";
+  if (Units == "M") {
+    if (visibility_meters >= 1000) {
+      float km = visibility_meters / 1000.0;
+      return String(km, km >= 10 ? 0 : 1) + "km";
+    }
+    return String(visibility_meters) + "m";
+  }
+  float miles = visibility_meters / 1609.344;
+  return String(miles, miles >= 10 ? 0 : 1) + "mi";
+}
+//#########################################################################################
+int FontGalleryCount() {
+#if CROWPANEL_FONT_GALLERY
+  return 10;
+#else
+  return 1;
+#endif
+}
+//#########################################################################################
+const char* FontGalleryLabel() {
+#if CROWPANEL_FONT_GALLERY
+  static const char* labels[] = {
+    "helvetica_regular",
+    "lucida_sans",
+    "lucida_bright",
+    "new_century",
+    "times",
+    "courier",
+    "x11_9x15",
+    "t0_terminal",
+    "profont",
+    "fub"
+  };
+  return labels[FontGalleryIndex];
+#else
+  return "normal";
+#endif
+}
+//#########################################################################################
+const uint8_t* FontGalleryFont(UIFontSize size) {
+#if CROWPANEL_FONT_GALLERY
+  switch (FontGalleryIndex) {
+    case 0:
+      if (size == UI_FONT_08) return u8g2_font_helvR08_tf;
+      if (size == UI_FONT_10) return u8g2_font_helvR10_tf;
+      if (size == UI_FONT_12) return u8g2_font_helvR12_tf;
+      if (size == UI_FONT_14) return u8g2_font_helvR14_tf;
+      return u8g2_font_helvR24_tf;
+    case 1:
+      if (size == UI_FONT_08) return u8g2_font_luRS08_tf;
+      if (size == UI_FONT_10) return u8g2_font_luRS10_tf;
+      if (size == UI_FONT_12) return u8g2_font_luRS12_tf;
+      if (size == UI_FONT_14) return u8g2_font_luRS14_tf;
+      return u8g2_font_luRS24_tf;
+    case 2:
+      if (size == UI_FONT_08) return u8g2_font_lubR08_tf;
+      if (size == UI_FONT_10) return u8g2_font_lubR10_tf;
+      if (size == UI_FONT_12) return u8g2_font_lubR12_tf;
+      if (size == UI_FONT_14) return u8g2_font_lubR14_tf;
+      return u8g2_font_lubR24_tf;
+    case 3:
+      if (size == UI_FONT_08) return u8g2_font_ncenR08_tf;
+      if (size == UI_FONT_10) return u8g2_font_ncenR10_tf;
+      if (size == UI_FONT_12) return u8g2_font_ncenR12_tf;
+      if (size == UI_FONT_14) return u8g2_font_ncenR14_tf;
+      return u8g2_font_ncenR24_tf;
+    case 4:
+      if (size == UI_FONT_08) return u8g2_font_timR08_tf;
+      if (size == UI_FONT_10) return u8g2_font_timR10_tf;
+      if (size == UI_FONT_12) return u8g2_font_timR12_tf;
+      if (size == UI_FONT_14) return u8g2_font_timR14_tf;
+      return u8g2_font_timR24_tf;
+    case 5:
+      if (size == UI_FONT_08) return u8g2_font_courR08_tf;
+      if (size == UI_FONT_10) return u8g2_font_courR10_tf;
+      if (size == UI_FONT_12) return u8g2_font_courR12_tf;
+      if (size == UI_FONT_14) return u8g2_font_courR14_tf;
+      return u8g2_font_courR24_tf;
+    case 6:
+      if (size == UI_FONT_08) return u8g2_font_7x13_tf;
+      return u8g2_font_9x15_tf;
+    case 7:
+      if (size == UI_FONT_08) return u8g2_font_t0_11_tf;
+      if (size == UI_FONT_10) return u8g2_font_t0_12_tf;
+      if (size == UI_FONT_12) return u8g2_font_t0_14_tf;
+      if (size == UI_FONT_14) return u8g2_font_t0_17_tf;
+      return u8g2_font_t0_22_tf;
+    case 8:
+      if (size == UI_FONT_08) return u8g2_font_profont10_tf;
+      if (size == UI_FONT_10) return u8g2_font_profont11_tf;
+      if (size == UI_FONT_12) return u8g2_font_profont12_tf;
+      if (size == UI_FONT_14) return u8g2_font_profont17_tf;
+      return u8g2_font_profont22_tf;
+    case 9:
+      if (size == UI_FONT_08) return u8g2_font_fub11_tf;
+      if (size == UI_FONT_10) return u8g2_font_fub11_tf;
+      if (size == UI_FONT_12) return u8g2_font_fub14_tf;
+      if (size == UI_FONT_14) return u8g2_font_fub17_tf;
+      return u8g2_font_fub25_tf;
+  }
+#endif
+  if (size == UI_FONT_08) return u8g2_font_6x12_tf;
+  return u8g2_font_8x13_tf;
+}
+//#########################################################################################
+void SetUIFont(UIFontSize size) {
+  u8g2Fonts.setFont(FontGalleryFont(size));
 }
 //#########################################################################################
 bool ReceiveNoaaTidePredictions(bool print) {
@@ -270,12 +424,14 @@ void LoadStaticPreviewData() {
   }
 
   for (int r = 0; r < max_readings; r++) {
-    const float wave = sin(r * PI / 8.0);
+    const float daily_wave = sin((r + CurrentHour - 8) * PI / 12.0);
+    const float gust_wave = sin(r * PI / 9.0);
     WxForecast[r].Dt = (CurrentHour + r) * 3600;
-    WxForecast[r].Temperature = (metric ? 18.0 : 64.0) + wave * (metric ? 4.0 : 7.0);
-    WxForecast[r].Pressure = metric ? (1016 + cos(r * PI / 10.0) * 4) : (30.0 + cos(r * PI / 10.0) * 0.12);
+    WxForecast[r].Temperature = (metric ? 18.0 : 64.0) + daily_wave * (metric ? 4.0 : 7.0) + (r / 24) * (metric ? 0.6 : 1.0);
+    WxForecast[r].FeelsLike = WxForecast[r].Temperature - (metric ? 1.0 : 2.0);
+    WxForecast[r].Pressure = metric ? (1016 + cos(r * PI / 24.0) * 4) : (30.0 + cos(r * PI / 24.0) * 0.12);
     WxForecast[r].Humidity = 58 + r % 7;
-    WxForecast[r].Windspeed = (metric ? 4.0 : 9.0) + abs(wave) * (metric ? 4.0 : 8.0);
+    WxForecast[r].Windspeed = (metric ? 4.0 : 9.0) + abs(gust_wave) * (metric ? 4.0 : 8.0);
     WxForecast[r].Winddir = 120 + r * 8;
     WxForecast[r].Rainfall = (r == 9 || r == 10 || r == 18) ? (metric ? 0.8 : 0.03) : 0;
     WxForecast[r].Snowfall = 0;
@@ -306,17 +462,12 @@ void DisplayWeather() {                 // 4.2" e-paper display is 400x300 resol
   DrawHeadingSection();                 // Top line of the display
   DrawMainWeatherSection(172, 70);      // Centre section of display for Location, temperature, Weather report, current Wx Symbol and wind direction
   DrawForecastSection(233, 15);         // 3hr forecast boxes
-  DisplayPrecipitationSection(233, 82); // Precipitation sectio
-  if (WxConditions[0].Visibility > 0) {
-    String visibility_text = Units == "M" ? String(WxConditions[0].Visibility) + "M" : String(WxConditions[0].Visibility / 5280.0, 1) + "mi";
-    Visibility(335, 100, visibility_text);
-  }
-  if (WxConditions[0].Cloudcover > 0) CloudCover(350, 125, WxConditions[0].Cloudcover);
+  DisplayPrecipitationSection(233, 82); // Current precip, visibility and cloud cover
   DrawAstronomySection(233, 74);        // Middle-right Sun rise/set, Moon phase and Moon icon
 }
 //#########################################################################################
 void DrawHeadingSection() {
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
   drawString(SCREEN_WIDTH / 2, 0, City, CENTER);
   drawString(SCREEN_WIDTH, 0, date_str, RIGHT);
   drawString(4, 0, time_str, LEFT);
@@ -327,24 +478,41 @@ void DrawHeadingSection() {
 void DrawMainWeatherSection(int x, int y) {
   DisplayDisplayWindSection(x - 115, y - 3, WxConditions[0].Winddir, WxConditions[0].Windspeed, 40);
   DisplayWXicon(x + 5, y - 5, WxConditions[0].Icon, LargeIcon);
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+  SetUIFont(UI_FONT_10);
   DrawCurrentTideStatus(x - 120, y + 58);
-  u8g2Fonts.setFont(u8g2_font_helvB12_tf);
+  SetUIFont(UI_FONT_12);
   DrawMainWx(x, y + 60);
   display.drawRect(0, y + 68, 232, 48, GxEPD_BLACK);
   DrawTide24hGraph(0, y + 68, 232, 48);
 }
 //#########################################################################################
 void DrawForecastSection(int x, int y) {
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+  SetUIFont(UI_FONT_10);
   DrawForecastWeather(x, y, 0);
   DrawForecastWeather(x + 56, y, 1);
   DrawForecastWeather(x + 112, y, 2);
   //       (x,y,width,height,MinValue, MaxValue, Title, Data Array, AutoScale, ChartMode)
-  for (int r = 0; r < max_readings; r++) {
+  for (int r = 0; r < graph_readings; r++) {
 #if CROWPANEL_USE_OPEN_METEO
-    pressure_readings[r] = WxForecast[r].Pressure;
-    rain_readings[r]     = WxForecast[r].Rainfall;
+    int start = r * 3;
+    int end = min(start + 3, max_readings);
+    float temp_sum = 0;
+    float wind_sum = 0;
+    float pressure_sum = 0;
+    float rain_sum = 0;
+    int count = 0;
+    for (int sample = start; sample < end; sample++) {
+      temp_sum += WxForecast[sample].Temperature;
+      wind_sum += WxForecast[sample].Windspeed;
+      pressure_sum += WxForecast[sample].Pressure;
+      rain_sum += WxForecast[sample].Rainfall;
+      count++;
+    }
+    if (count == 0) count = 1;
+    temperature_readings[r] = temp_sum / count;
+    wind_readings[r]        = wind_sum / count;
+    pressure_readings[r]    = pressure_sum / count;
+    rain_readings[r]        = rain_sum;
 #else
     if (Units == "I") {
       pressure_readings[r] = WxForecast[r].Pressure * 0.02953;
@@ -354,39 +522,38 @@ void DrawForecastSection(int x, int y) {
       pressure_readings[r] = WxForecast[r].Pressure;
       rain_readings[r]     = WxForecast[r].Rainfall;
     }
-#endif
     temperature_readings[r] = WxForecast[r].Temperature;
     wind_readings[r]        = WxForecast[r].Windspeed;
+#endif
   }
   display.drawLine(0, y + 172, SCREEN_WIDTH, y + 172, GxEPD_BLACK);
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  DrawGraph(SCREEN_WIDTH / 400 * 30,  SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 0, 30, Units == "M" ? "Wind (m/s)" : "Wind (mph)", wind_readings, max_readings, autoscale_on, barchart_off);
-  DrawGraph(SCREEN_WIDTH / 400 * 158, SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 10, 30, Units == "M" ? TXT_TEMPERATURE_C : TXT_TEMPERATURE_F, temperature_readings, max_readings, autoscale_on, barchart_off);
-  DrawGraph(SCREEN_WIDTH / 400 * 288, SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 0, 30, Units == "M" ? TXT_RAINFALL_MM : TXT_RAINFALL_IN, rain_readings, max_readings, autoscale_on, barchart_on);
+  SetUIFont(UI_FONT_10);
+  DrawGraph(SCREEN_WIDTH / 400 * 30,  SCREEN_HEIGHT / 300 * 206, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5 + 10, 0, 30, Units == "M" ? "Wind (m/s)" : "Wind (mph)", wind_readings, graph_readings, autoscale_on, barchart_off);
+  DrawGraph(SCREEN_WIDTH / 400 * 158, SCREEN_HEIGHT / 300 * 206, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5 + 10, 10, 30, Units == "M" ? TXT_TEMPERATURE_C : TXT_TEMPERATURE_F, temperature_readings, graph_readings, autoscale_on, barchart_off);
+  DrawGraph(SCREEN_WIDTH / 400 * 288, SCREEN_HEIGHT / 300 * 206, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5 + 10, 0, 30, Units == "M" ? TXT_RAINFALL_MM : TXT_RAINFALL_IN, rain_readings, graph_readings, autoscale_on, barchart_on);
 }
 //#########################################################################################
 void DrawForecastWeather(int x, int y, int index) {
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  const int forecast_index = min((index + 1) * 3, max_readings - 1);
+  SetUIFont(UI_FONT_08);
   display.drawRect(x, y, 55, 65, GxEPD_BLACK);
   display.drawLine(x + 1, y + 13, x + 54, y + 13, GxEPD_BLACK);
-  DisplayWXicon(x + 28, y + 35, Daily[index].Icon, SmallIcon);
-  drawString(x + 31, y + 3, String(ConvertUnixTime(Daily[index].Dt + WxConditions[0].Timezone).substring(0,5)), CENTER);
-  drawString(x + 41, y + 52, String(Daily[index].High, 0) + "° / " + String(Daily[index].Low, 0) + "°", CENTER);
+  DisplayWXicon(x + 28, y + 35, WxForecast[forecast_index].Icon, SmallIcon);
+  drawString(x + 31, y + 3, ForecastTimeLabel(WxForecast[forecast_index].Dt), CENTER);
+  drawString(x + 41, y + 52, String(WxForecast[forecast_index].Temperature, 0) + "° / " + String(WxForecast[forecast_index].FeelsLike, 0) + "°", CENTER);
 }
 //#########################################################################################
 void DrawMainWx(int x, int y) {
-  u8g2Fonts.setFont(u8g2_font_helvB14_tf);
+  SetUIFont(UI_FONT_14);
   drawString(x - 25, y - 22, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
-  u8g2Fonts.setFont(u8g2_font_helvB12_tf);
+  SetUIFont(UI_FONT_12);
   drawString(x - 15, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
   drawString(x + 37, y - 22, String(WxConditions[0].Humidity, 0) + "%", CENTER);
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  drawString(x + 39, y - 3, "RH", CENTER);
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
-  arrow(x, y, Cradius - 7, angle, 12, 18); // Show wind direction on outer circle of width and length
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  arrow(x, y, 0, angle, 8, 12); // Show wind direction inside the inner ring
+  SetUIFont(UI_FONT_08);
   int dxo, dyo, dxi, dyi;
   display.drawLine(0, 15, 0, y + Cradius + 30, GxEPD_BLACK);
   display.drawCircle(x, y, Cradius, GxEPD_BLACK);     // Draw compass circle
@@ -477,14 +644,14 @@ void DrawCurrentTideStatus(int x, int y) {
   float current_hour = CurrentHour + CurrentMin / 60.0;
   float tide_height = TideHeightAtHour(current_hour);
   bool rising = IsTideRisingAtHour(current_hour);
-  u8g2Fonts.setFont(u8g2_font_helvB12_tf);
+  SetUIFont(UI_FONT_12);
   drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
   DrawTideArrow(x + 36, y - 2, rising);
 }
 //#########################################################################################
 void DrawTide24hGraph(int x, int y, int w, int h) {
   if (LocalTideSampleCount == 0) {
-    u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+    SetUIFont(UI_FONT_08);
     drawString(x + w / 2, y + h / 2 - 5, "No tide data", CENTER);
     return;
   }
@@ -505,7 +672,7 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
   const int graph_w = w - 16;
   const int graph_h = h - 24;
 
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
   drawString(x + 6, y + 2, "24h Tide", LEFT);
   drawString(x + w - 6, y + 2, String(TideHeightAtHour(CurrentHour + CurrentMin / 60.0), 1) + "ft", RIGHT);
   display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
@@ -521,28 +688,40 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
     last_y = py;
   }
 
-  for (int hour = 0; hour <= 24; hour += 6) {
-    int tx = graph_x + hour * graph_w / 24;
-    display.drawLine(tx, graph_y + graph_h, tx, graph_y + graph_h + 3, GxEPD_BLACK);
-    drawString(tx, graph_y + graph_h + 4, String(hour), CENTER);
+  const float sun_hours[] = {UnixLocalHour(WxConditions[0].Sunrise), UnixLocalHour(WxConditions[0].Sunset)};
+  for (int marker = 0; marker < 2; marker++) {
+    int sx = graph_x + int(sun_hours[marker] * graph_w / 24.0);
+    for (int sy = graph_y + 1; sy < graph_y + graph_h; sy += 4) {
+      display.drawFastVLine(sx, sy, 2, GxEPD_BLACK);
+    }
   }
 
-  int now_x = graph_x + CurrentHour * graph_w / 24;
+  for (int hour = 0; hour < 24; hour += 6) {
+    int tx = graph_x + hour * graph_w / 24;
+    display.drawLine(tx, graph_y + graph_h, tx, graph_y + graph_h + 3, GxEPD_BLACK);
+    String label = String(hour) + ":00";
+    drawString(tx, graph_y + graph_h + 4, label, hour == 0 ? LEFT : CENTER);
+  }
+
+  int now_x = graph_x + int((CurrentHour + CurrentMin / 60.0) * graph_w / 24.0);
   display.drawLine(now_x, graph_y, now_x, graph_y + graph_h, GxEPD_BLACK);
 }
 //#########################################################################################
 void DisplayPrecipitationSection(int x, int y) {
-  display.drawRect(x, y - 1, 167, 56, GxEPD_BLACK); // precipitation outline
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  if (WxForecast[1].Rainfall > 0.005) { // Ignore small amounts
-    drawString(x + 5, y + 15, String(WxForecast[1].Rainfall, 2) + (Units == "M" ? "mm" : "in"), LEFT); // Only display rainfall total today if > 0
-    addraindrop(x + 65 - (Units == "I" ? 10 : 0), y + 16, 7);
-  }
-  if (WxForecast[1].Snowfall > 0.005)  // Ignore small amounts
-    drawString(x + 5, y + 35, String(WxForecast[1].Snowfall, 2) + (Units == "M" ? "mm" : "in") + " * *", LEFT); // Only display snowfall total today if > 0
+  display.drawRect(x, y - 1, 167, 56, GxEPD_BLACK);
+  SetUIFont(UI_FONT_08);
+
+  const float precip = WxForecast[1].Rainfall;
+  const String precip_units = Units == "M" ? "mm" : "in";
+  const String precip_text = String(precip, precip >= 1 ? 1 : 2) + precip_units;
+  addraindrop(x + 17, y + 16, 6);
+  drawString(x + 31, y + 7, precip_text, LEFT);
+
+  Visibility(x + 112, y + 19, FormatVisibility(WxConditions[0].Visibility));
+  CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
 }
 void DrawAstronomySection(int x, int y) {
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
   display.drawRect(x, y + 64, 167, 48, GxEPD_BLACK);
   drawString(x + 7, y + 70, ConvertUnixTime(WxConditions[0].Sunrise + WxConditions[0].Timezone).substring(0, (Units == "M" ? 5 : 7)) + " " + TXT_SUNRISE, LEFT);
   drawString(x + 7, y + 85, ConvertUnixTime(WxConditions[0].Sunset + WxConditions[0].Timezone).substring(0, (Units == "M" ? 5 : 7)) + " " + TXT_SUNSET, LEFT);
@@ -957,7 +1136,7 @@ void CloudCover(int x, int y, int CCover) {
   addcloud(x - 9, y - 3, Small * 0.5, 2); // Cloud top left
   addcloud(x + 3, y - 3, Small * 0.5, 2); // Cloud top right
   addcloud(x, y,         Small * 0.5, 2); // Main cloud
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
   drawString(x + 15, y - 5, String(CCover) + "%", LEFT);
 }
 //#########################################################################################
@@ -975,7 +1154,7 @@ void Visibility(int x, int y, String Visi) {
     display.drawPixel(x + r * cos(i), 1 + y + r / 2 + r * sin(i), GxEPD_BLACK);
   }
   display.fillCircle(x, y, r / 4, GxEPD_BLACK);
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
   drawString(x + 12, y - 3, Visi, LEFT);
 }
 //#########################################################################################
@@ -993,9 +1172,9 @@ void addmoon(int x, int y, int scale, bool IconSize) {
 }
 //#########################################################################################
 void Nodata(int x, int y, bool IconSize, String IconName) {
-  if (IconSize == LargeIcon) u8g2Fonts.setFont(u8g2_font_helvB24_tf); else u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+  if (IconSize == LargeIcon) SetUIFont(UI_FONT_24); else SetUIFont(UI_FONT_10);
   drawString(x - 3, y - 8, "?", CENTER);
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
+  SetUIFont(UI_FONT_08);
 }
 //#########################################################################################
 void DrawBattery(int x, int y) {
@@ -1028,7 +1207,7 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   int last_x, last_y;
   float x1, y1, x2, y2;
   if (auto_scale == true) {
-    for (int i = 1; i < readings; i++ ) {
+    for (int i = 0; i < readings; i++ ) {
       if (DataArray[i] >= maxYscale) maxYscale = DataArray[i];
       if (DataArray[i] <= minYscale) minYscale = DataArray[i];
     }
@@ -1037,27 +1216,23 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
     if (minYscale != 0) minYscale = round(minYscale - auto_scale_margin); // Auto scale the graph and round to the nearest value defined, default was Y1Min
     Y1Min = round(minYscale);
   }
-  // Draw the graph
-  last_x = x_pos + 1;
-  last_y = y_pos + (Y1Max - constrain(DataArray[1], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
-  display.drawRect(x_pos, y_pos, gwidth + 3, gheight + 2, GxEPD_BLACK);
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
-  drawString(x_pos + gwidth / 2, y_pos - 12, title, CENTER);
+  if (Y1Max == Y1Min) Y1Max = Y1Min + 1;
   // Draw the graph
   last_x = x_pos;
-  last_y = y_pos + (Y1Max - constrain(DataArray[1], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
+  last_y = y_pos + (Y1Max - constrain(DataArray[0], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
   display.drawRect(x_pos, y_pos, gwidth + 3, gheight + 2, GxEPD_BLACK);
+  SetUIFont(UI_FONT_08);
   drawString(x_pos + gwidth / 2, y_pos - 13, title, CENTER);
   // Draw the data
   for (int gx = 0; gx < readings; gx++) {
     y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;
     if (barchart_mode) {
-      x2 = x_pos + gx * (gwidth / readings) + 2;
+      x2 = x_pos + gx * (gwidth / readings) + 1;
       display.fillRect(x2, y2, (gwidth / readings) - 2, y_pos + gheight - y2 + 2, GxEPD_BLACK);
     }
     else
     {
-      x2 = x_pos + gx * gwidth / (readings - 1) + 1; // max_readings is the global variable that sets the maximum data that can be plotted
+      x2 = x_pos + gx * gwidth / (readings - 1); // max_readings is the global variable that sets the maximum data that can be plotted
       display.drawLine(last_x, last_y, x2, y2, GxEPD_BLACK);
     }
     last_x = x2;
@@ -1065,23 +1240,26 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   }
   //Draw the Y-axis scale
 #define number_of_dashes 15
+  int last_axis_label = 32767;
+  const bool rainfall_axis = title == TXT_RAINFALL_IN || title == TXT_RAINFALL_MM;
   for (int spacing = 0; spacing <= y_minor_axis; spacing++) {
     for (int j = 0; j < number_of_dashes; j++) { // Draw dashed graph grid lines
       if (spacing < y_minor_axis) display.drawFastHLine((x_pos + 3 + j * gwidth / number_of_dashes), y_pos + (gheight * spacing / y_minor_axis), gwidth / (2 * number_of_dashes), GxEPD_BLACK);
     }
-    if ((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing) < 5 || title == TXT_PRESSURE_IN) {
-      drawString(x_pos, y_pos + gheight * spacing / y_minor_axis - 5, String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 1), RIGHT);
+    float axis_value = Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing;
+    if (rainfall_axis) {
+      drawString(x_pos - 3, y_pos + gheight * spacing / y_minor_axis - 5, String(axis_value + 0.01, 1), RIGHT);
     }
-    else
-    {
-      if (Y1Min < 1 && Y1Max < 10)
-        drawString(x_pos - 3, y_pos + gheight * spacing / y_minor_axis - 5, String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 1), RIGHT);
-      else
-        drawString(x_pos - 3, y_pos + gheight * spacing / y_minor_axis - 5, String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 0), RIGHT);
+    else {
+      int axis_label = round(axis_value);
+      if (spacing == 0 || spacing == y_minor_axis || axis_label != last_axis_label) {
+        drawString(x_pos - 3, y_pos + gheight * spacing / y_minor_axis - 5, String(axis_label), RIGHT);
+        last_axis_label = axis_label;
+      }
     }
   }
-  for (int i = 0; i <= 2; i++) {
-    drawString(15 + x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(i), LEFT);
+  for (int i = 0; i <= 3; i++) {
+    drawString(x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(i), CENTER);
   }
   drawString(x_pos + gwidth / 2, y_pos + gheight + 10, TXT_DAYS, CENTER);
 }
@@ -1105,7 +1283,7 @@ void drawStringMaxWidth(int x, int y, unsigned int text_width, String text, alig
   if (align == CENTER) x = x - w / 2;
   u8g2Fonts.setCursor(x, y);
   if (text.length() > text_width * 2) {
-    u8g2Fonts.setFont(u8g2_font_helvB10_tf);
+    SetUIFont(UI_FONT_10);
     text_width = 42;
     y = y - 3;
   }
@@ -1126,7 +1304,7 @@ void InitialiseDisplay() {
   u8g2Fonts.setFontDirection(0);             // left to right (this is default)
   u8g2Fonts.setForegroundColor(GxEPD_BLACK); // apply Adafruit GFX color
   u8g2Fonts.setBackgroundColor(GxEPD_WHITE); // apply Adafruit GFX color
-  u8g2Fonts.setFont(u8g2_font_helvB10_tf);   // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
+  SetUIFont(UI_FONT_10);   // select u8g2 font from here: https://github.com/olikraus/u8g2/wiki/fntlistall
   display.fillScreen(GxEPD_WHITE);
 }
 /*

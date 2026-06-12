@@ -256,6 +256,12 @@ bool DecodeOpenMeteoWeather(const String& json, bool print) {
     WxForecast[r].Icon        = OpenMeteoIcon(weather_code);
     WxForecast[r].Description = OpenMeteoDescription(weather_code);
   }
+  if (WxConditions[0].Visibility <= 0 && hourly_count > 0) {
+    WxConditions[0].Visibility = WxForecast[0].Visibility;
+  }
+  if (WxConditions[0].Cloudcover <= 0 && hourly_count > 0) {
+    WxConditions[0].Cloudcover = WxForecast[0].Cloudcover;
+  }
 
   JsonObject daily = doc["daily"];
   JsonArray daily_time = daily["time"];
@@ -301,6 +307,8 @@ bool DecodeOpenMeteoWeather(const String& json, bool print) {
     Serial.println("Fore: " + WxConditions[0].Description);
     Serial.println("Temp: " + String(WxConditions[0].Temperature));
     Serial.println("WSpd: " + String(WxConditions[0].Windspeed));
+    Serial.println("Visi: " + String(WxConditions[0].Visibility));
+    Serial.println("CCov: " + String(WxConditions[0].Cloudcover));
   }
   return true;
 }
