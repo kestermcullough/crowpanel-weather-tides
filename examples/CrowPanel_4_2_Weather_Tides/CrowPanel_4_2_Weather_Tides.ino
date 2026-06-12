@@ -314,8 +314,11 @@ const uint8_t* FontGalleryFont(UIFontSize size) {
       return u8g2_font_fub25_tf;
   }
 #endif
-  if (size == UI_FONT_08) return u8g2_font_6x12_tf;
-  return u8g2_font_8x13_tf;
+  if (size == UI_FONT_08) return u8g2_font_profont10_tf;
+  if (size == UI_FONT_10) return u8g2_font_profont11_tf;
+  if (size == UI_FONT_12) return u8g2_font_profont12_tf;
+  if (size == UI_FONT_14) return u8g2_font_profont17_tf;
+  return u8g2_font_profont22_tf;
 }
 //#########################################################################################
 void SetUIFont(UIFontSize size) {
@@ -717,7 +720,7 @@ void DisplayPrecipitationSection(int x, int y) {
   drawString(x + 29, y + 6, precip_text, LEFT);
   drawString(x + 8, y + 30, String(WxConditions[0].Humidity, 0) + "%", LEFT);
 
-  Visibility(x + 112, y + 17, FormatVisibility(WxConditions[0].Visibility));
+  drawString(x + 86, y + 7, "Vis " + FormatVisibility(WxConditions[0].Visibility), LEFT);
   CloudCover(x + 105, y + 42, WxConditions[0].Cloudcover);
 }
 void DrawAstronomySection(int x, int y) {
