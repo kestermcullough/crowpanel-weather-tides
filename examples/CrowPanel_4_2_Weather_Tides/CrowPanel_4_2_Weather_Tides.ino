@@ -51,6 +51,10 @@
 #define CROWPANEL_STATIC_PREVIEW 0
 #endif
 
+#ifndef CROWPANEL_FRAMEBUFFER_DUMP
+#define CROWPANEL_FRAMEBUFFER_DUMP 0
+#endif
+
 enum alignment {LEFT, RIGHT, CENTER};
 
 GFXcanvas1 display(CrowPanelEPD::WIDTH, CrowPanelEPD::HEIGHT);
@@ -100,6 +104,7 @@ int  SleepTime     = 23; // Sleep after (23+1) 00:00 to save battery power
 
 void LoadStaticPreviewData();
 bool ReceiveNoaaTidePredictions(bool print);
+void DumpFramebuffer(const char* label);
 
 //#########################################################################################
 void setup() {
@@ -112,6 +117,7 @@ void setup() {
   InitialiseDisplay();
   display.fillScreen(GxEPD_WHITE);
   DisplayWeather();
+  DumpFramebuffer("static");
   CrowPanelEPD::refresh(display.getBuffer());
 #else
   if (StartWiFi() == WL_CONNECTED && SetupTime() == true) {
@@ -131,6 +137,7 @@ void setup() {
         StopWiFi(); // Reduces power consumption
         display.fillScreen(GxEPD_WHITE);
         DisplayWeather();
+        DumpFramebuffer("live");
         CrowPanelEPD::refresh(display.getBuffer());
       }
     }
@@ -140,6 +147,24 @@ void setup() {
 }
 //#########################################################################################
 void loop() { // this will never run!
+}
+//#########################################################################################
+void DumpFramebuffer(const char* label) {
+#if CROWPANEL_FRAMEBUFFER_DUMP
+  const uint8_t* buffer = display.getBuffer();
+  const uint32_t bytes = ((uint32_t)CrowPanelEPD::WIDTH + 7) / 8 * CrowPanelEPD::HEIGHT;
+  Serial.printf("FB_DUMP_BEGIN label=%s width=%d height=%d bytes=%lu format=GFXcanvas1 bit=1:white bit=0:black\r\n",
+                label, CrowPanelEPD::WIDTH, CrowPanelEPD::HEIGHT, bytes);
+  for (uint32_t index = 0; index < bytes; index++) {
+    if (buffer[index] < 16) Serial.print('0');
+    Serial.print(buffer[index], HEX);
+    if ((index + 1) % 32 == 0) Serial.println();
+  }
+  if (bytes % 32 != 0) Serial.println();
+  Serial.println("FB_DUMP_END");
+#else
+  (void)label;
+#endif
 }
 //#########################################################################################
 bool ReceiveNoaaTidePredictions(bool print) {

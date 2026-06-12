@@ -30,6 +30,16 @@ This example is adapted from `examples/Waveshare_4_2` for the Elecrow CrowPanel 
 
 The default refresh is 30 minutes. Open-Meteo's free API is for non-commercial use and is far above this display's refresh rate. NOAA CO-OPS is also queried once per refresh for hourly tide predictions.
 
+The display refresh window is controlled in the sketch:
+
+```cpp
+long SleepDuration = 30;
+int  WakeupTime    = 7;
+int  SleepTime     = 23;
+```
+
+With these defaults, the ESP32 wakes every 30 minutes. It refreshes the screen from 07:00 through 23:59, then skips screen/API refreshes from 00:00 through 06:59. If power is removed and restored, it boots normally and updates again during the refresh window.
+
 ## Static Panel Test
 
 Before testing Wi-Fi and live API fetches, flash the static preview environment:
@@ -99,3 +109,26 @@ Outputs:
 - `preview/software-render.png`: scaled preview for easier inspection.
 
 This is not a hardware framebuffer capture, but it exercises the same layout decisions closely enough to catch text collisions, graph placement, and panel spacing before flashing the CrowPanel.
+
+## Firmware Framebuffer Capture
+
+For pixel-accurate layout checks, build a framebuffer dump environment and capture the exact `GFXcanvas1` bytes over serial:
+
+```bash
+../../.venv-platformio/bin/platformio run -e esp32s3_dump -t upload --upload-port /dev/cu.usbserial-110
+../../.venv-platformio/bin/python preview/capture_framebuffer.py --port /dev/cu.usbserial-110
+```
+
+Outputs:
+
+- `preview/framebuffer-capture-raw-1bit.png`: exact 400x300 framebuffer.
+- `preview/framebuffer-capture.png`: scaled preview for inspection.
+
+There is also a deterministic no-network dump environment:
+
+```bash
+../../.venv-platformio/bin/platformio run -e esp32s3_static_dump -t upload --upload-port /dev/cu.usbserial-110
+../../.venv-platformio/bin/python preview/capture_framebuffer.py --port /dev/cu.usbserial-110
+```
+
+After capture testing, flash the normal `esp32s3` environment again so the device does not print framebuffer dumps on every wake.
