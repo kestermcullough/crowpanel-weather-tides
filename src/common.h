@@ -94,14 +94,18 @@ bool ReceiveOneCallWeather(WiFiClient& client, bool print) {
   http.begin(client, server, 80, uri);
   int httpCode = http.GET();
   if(httpCode == HTTP_CODE_OK) {
-    if (!DecodeOneCallWeather(http.getStream(), print)) return false;
+    bool decoded = DecodeOneCallWeather(http.getStream(), print);
     client.stop();
     http.end();
-    return true;
+    return decoded;
   }
   else
   {
-    Serial.printf("connection failed, error: %s", http.errorToString(httpCode).c_str());
+    Serial.printf("OpenWeather HTTP status: %d, error: %s\n", httpCode, http.errorToString(httpCode).c_str());
+    String response = http.getString();
+    if (response.length() > 0) {
+      Serial.println(response.substring(0, 240));
+    }
     client.stop();
     http.end();
     return false;
