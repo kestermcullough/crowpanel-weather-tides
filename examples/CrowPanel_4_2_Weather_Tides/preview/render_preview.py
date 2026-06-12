@@ -152,7 +152,7 @@ def draw_wind_section(c: Canvas, x: int, y: int, angle: float, speed: float, rad
     c.text(x + radius + 8, y - 5, "E", "B08", "center")
     c.text(x - 2, y - 24, wind_direction(angle), "B08", "center")
     c.text(x + 3, y + 8, f"{angle:.0f}°", "B08", "center")
-    c.text(x + 3, y - 8, f"{speed:.1f}", "B18", "center")
+    c.text(x + 3, y - 8, f"{speed:.0f}", "B18", "center")
     c.text(x + 3, y + 15, "m/s" if units == "M" else "mph", "B08", "center")
 
 
@@ -208,10 +208,10 @@ def draw_main_weather(c: Canvas, data: dict, tide_samples: list[tuple[int, float
     draw_wind_section(c, x - 115, y - 3, w["wind_dir"], w["wind_speed"], 40, units)
     draw_weather_icon(c, x + 5, y - 5, w["icon"], True)
     draw_current_tide_status(c, x - 120, y + 58, data, tide_samples)
-    c.text(x - 25, y + 37, f"{w['temperature']:.1f}°{'C' if units == 'M' else 'F'}", "B14", "center")
+    c.text(x - 25, y + 37, f"{w['temperature']:.0f}°{'C' if units == 'M' else 'F'}", "B14", "center")
     c.text(x - 15, y + 57, f"{w['high']:.0f}° | {w['low']:.0f}°", "B12", "center")
-    c.text(x + 30, y + 37, f"{w['humidity']:.0f}%", "B12", "center")
-    c.text(x + 32, y + 57, "RH", "B10", "center")
+    c.text(x + 37, y + 37, f"{w['humidity']:.0f}%", "B12", "center")
+    c.text(x + 39, y + 57, "RH", "B10", "center")
     c.rect(0, y + 68, 232, 48)
     draw_tide_24h_graph(c, 0, y + 68, 232, 48, data, tide_samples)
 
@@ -219,7 +219,6 @@ def draw_main_weather(c: Canvas, data: dict, tide_samples: list[tuple[int, float
 def draw_current_tide_status(c: Canvas, x: int, y: int, data: dict, tide_samples: list[tuple[int, float]]) -> None:
     hour = data["current_hour"] + data["current_min"] / 60
     height = tide_height_at_hour(tide_samples, hour)
-    c.text(x - 5, y - 15, "Tide", "B08", "center")
     c.text(x - 4, y - 4, f"{height:.1f}ft", "B12", "center")
     draw_tide_arrow(c, x + 36, y + 5, tide_rising(tide_samples, hour))
 
@@ -269,7 +268,6 @@ def draw_forecast_section(c: Canvas, data: dict) -> None:
     for idx, daily in enumerate(data["daily"][:3]):
         draw_forecast_box(c, x + idx * 56, y, daily)
     c.line((0, y + 172, SCREEN_WIDTH, y + 172))
-    c.text(SCREEN_WIDTH // 2, y + 178, "3-Day Forecast Values", "B12", "center")
     hourly = data["hourly"]
     units = data["units"]
     draw_graph(c, 30, 221, SCREEN_WIDTH // 4, SCREEN_HEIGHT // 5, 0, 30, "Wind (m/s)" if units == "M" else "Wind (mph)", hourly["wind"], True, False)

@@ -250,8 +250,6 @@ void DrawForecastSection(int x, int y) {
     wind_readings[r]        = WxForecast[r].Windspeed;
   }
   display.drawLine(0, y + 172, SCREEN_WIDTH, y + 172, GxEPD_BLACK);
-  u8g2Fonts.setFont(u8g2_font_helvB12_tf);
-  drawString(SCREEN_WIDTH / 2, y + 180, TXT_FORECAST_VALUES, CENTER);
   u8g2Fonts.setFont(u8g2_font_helvB10_tf);
   DrawGraph(SCREEN_WIDTH / 400 * 30,  SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 0, 30, Units == "M" ? "Wind (m/s)" : "Wind (mph)", wind_readings, max_readings, autoscale_on, barchart_off);
   DrawGraph(SCREEN_WIDTH / 400 * 158, SCREEN_HEIGHT / 300 * 221, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 5, 10, 30, Units == "M" ? TXT_TEMPERATURE_C : TXT_TEMPERATURE_F, temperature_readings, max_readings, autoscale_on, barchart_off);
@@ -269,12 +267,12 @@ void DrawForecastWeather(int x, int y, int index) {
 //#########################################################################################
 void DrawMainWx(int x, int y) {
   u8g2Fonts.setFont(u8g2_font_helvB14_tf);
-  drawString(x - 25, y - 22, String(WxConditions[0].Temperature, 1) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
+  drawString(x - 25, y - 22, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
   u8g2Fonts.setFont(u8g2_font_helvB12_tf);
   drawString(x - 15, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
-  drawString(x + 30, y - 22, String(WxConditions[0].Humidity, 0) + "%", CENTER);
+  drawString(x + 37, y - 22, String(WxConditions[0].Humidity, 0) + "%", CENTER);
   u8g2Fonts.setFont(u8g2_font_helvB10_tf);
-  drawString(x + 32, y - 3, "RH", CENTER);
+  drawString(x + 39, y - 3, "RH", CENTER);
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
@@ -307,7 +305,7 @@ void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int C
   drawString(x + Cradius + 8,  y - 3, TXT_E, CENTER);
   drawString(x - 2, y - 20, WindDegToDirection(angle), CENTER);
   drawString(x + 3, y + 12, String(angle, 0) + "°", CENTER);
-  drawString(x + 3, y - 3, String(windspeed, 1) + (Units == "M" ? "m/s" : "mph"), CENTER);
+  drawString(x + 3, y - 3, String(windspeed, 0) + (Units == "M" ? "m/s" : "mph"), CENTER);
 }
 //#########################################################################################
 String WindDegToDirection(float winddirection) {
@@ -370,8 +368,6 @@ void DrawCurrentTideStatus(int x, int y) {
   float current_hour = CurrentHour + CurrentMin / 60.0;
   float tide_height = TideHeightAtHour(current_hour);
   bool rising = IsTideRisingAtHour(current_hour);
-  u8g2Fonts.setFont(u8g2_font_helvB08_tf);
-  drawString(x - 5, y - 13, "Tide", CENTER);
   u8g2Fonts.setFont(u8g2_font_helvB12_tf);
   drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
   DrawTideArrow(x + 36, y - 2, rising);
