@@ -1,118 +1,197 @@
-# ESP32-e-Paper-Weather-Display
+# CrowPanel Weather + Tides
 
-### NOTE: ###
-April 2024
+Weather and tide firmware for the Elecrow CrowPanel ESP32-S3 4.2-inch e-paper HMI display.
 
-From June 2024 you may have to pay for API (Wx Data) access. You will need to add a payment method to your account, so that OWM can charge you should you exceed 1000 calls/day.
-Also the API call in the source code may need to be changed from /2.5/ to /3.0/ as yet details are unknown, my best guess is:
-http://api.openweathermap.org/data/2.5/weather?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=1
-Becomes:
-http://api.openweathermap.org/data/**3.0**/weather?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=1
-#############
+This project started from `G6EJD/ESP32-e-Paper-Weather-Display`, but this repository is now focused on one device and one layout:
 
-### API ### 
-April 2024
+- Elecrow CrowPanel 4.2-inch e-paper display, 400x300 pixels.
+- ESP32-S3 CrowPanel board with the green-driver e-paper revision.
+- Norfolk, VA / Sewells Point tide station defaults.
+- Open-Meteo weather data, no weather API key required.
+- NOAA CO-OPS tide predictions, with local fallback tide samples.
+- Pixel-oriented layout tuning for the physical 1-bit e-paper panel.
 
-OpenWeatherMap have depreciated City names and now calls to their API need to includeLatitude and Longitude data.
-The examples have been updated to include LAT and LON variables in the credentials file and the associate API Call in Common.h has been modified to use the new format.
-This is the new format:
-https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
+## Current Layout
 
-ALSO NOTE: Most of the API 2.5 calls will still function, only those to the ONECALL variant will fail from June 2024
-#############
+The display is a compact weather dashboard:
 
-### FONTS ###
-April 2024
+- Current wind compass with wind speed and direction.
+- Current condition icon, temperature, and high/low.
+- Current tide height with rising/falling arrow.
+- Three near-term forecast boxes for the next 3, 6, and 9 hour forecast slots.
+- Weather detail panel with precipitation, visibility, humidity, and cloud cover.
+- 24-hour tide graph with sunrise/sunset markers.
+- Sunrise, sunset, and moon phase panel.
+- 3-day wind, temperature, and rainfall graphs.
 
-If you wish to use extended font characters for language accents, then simply change all instances of a Font selection in the source code from:
-u8g2_font_helvB08_tf
-to:
-u8g2_font_helvB08_t**e**
-#############
+## Hardware Notes
 
-An ESP32 and an ePaper Display reads [Open Weather Map](https://openweathermap.org/) and displays the weather
+The CrowPanel wiring is handled in firmware rather than through GxEPD2:
 
-For standalone use, download the ZIP file to your desktop.
+- Panel power enable: GPIO 7.
+- Green-driver enable: GPIO 41.
+- SPI SCK: GPIO 12.
+- SPI MOSI: GPIO 11.
+- E-paper RST: GPIO 47.
+- E-paper DC: GPIO 46.
+- E-paper CS: GPIO 45.
+- E-paper BUSY: GPIO 48.
 
-Go to Sketch > Include Library... > Add .ZIP Library... Then, choose the ZIP file.
+The display is rendered through a 400x300 `GFXcanvas1` framebuffer and then sent to the panel with the CrowPanel/Elecrow command sequence in `crowpanel_green_epd.h`.
 
-After inclusion, Go to File, Examples and scroll down to 'ESP32-e-paperWeather-display' and choose your version/screen size. Make sure to come back to this dialog from time to time to keep each library up to date. Also make sure that you only have one version of each of the libraries installed.
+## Data Sources
 
-Also see: https://www.arduino.cc/en/Guide/Libraries#toc4
+Weather comes from the Open-Meteo forecast API:
 
-- [Arduino JSON](https://github.com/bblanchon/ArduinoJson) (v6 or above) by Benoît Blanchon
+- current temperature, apparent temperature, humidity, cloud cover, visibility, pressure, wind, and weather code
+- 72 hours of hourly forecast data
+- daily high/low and sunrise/sunset
 
-Download the software to your Arduino's library directory.
+Tides come from NOAA CO-OPS predictions:
 
-1. From the examples, choose depending on your module either
-   - Waveshare_1_54
-   - Waveshare_2_13
-   - Waveshare_2_7
-   - Waveshare_2_9
-   - Waveshare_3_7
-   - Waveshare_4_2
-   - Waveshare_7_5
-   - Waveshare_7_5_T7 (newer 800x480 version of the older 640x384)
-   
-   Code requires [GxEPD2 library](https://github.com/ZinggJM/GxEPD2)
-   - which needs [Adafruit_GFX](https://github.com/adafruit/Adafruit-GFX-Library
-   - an also requires U8g2_for_Adafruit_GFX
+- default station: `8638610`, Sewells Point
+- fallback samples live in `examples/CrowPanel_4_2_Weather_Tides/local_tides.h`
 
-2. Obtain your [OWM API key](https://openweathermap.org/appid) - it's free
+Forecast icons are based on Open-Meteo WMO `weather_code`, not directly on rain amount. The rainfall graph uses the hourly `rain` field, so it can show rain even when the three sampled forecast boxes do not show a rain icon.
 
-3. Edit the owm_credentials.h file in the IDE (TAB at top of IDE) and change your Language, Country, choose your units Metric or Imperial and be sure to find a valid weather station location on OpenWeatherMap, if your display has all blank values your location does not exist!
+## Credentials And Location
 
-4. If your are using the older style Waveshare HAT then you need to use:
-  
-  **display.init(); //for older Waveshare HAT's 
-  
-  In the InitialiseDisplay() function, comment out the variant as required 
+Do not edit tracked credentials with private data.
 
-5. Save your files.
+Copy the example file:
 
-NOTE: See schematic for the wiring diagram, all displays are wired the same, so wire a 7.5" the same as a 4.2", 2.9" or 1.54" display! Both 2.13" TTGO T5 and 2.7" T5S boards come pre-wired. The 3.7" FireBeetle example contains wiring details.
+```sh
+cp examples/CrowPanel_4_2_Weather_Tides/owm_credentials_local.example.h \
+   examples/CrowPanel_4_2_Weather_Tides/owm_credentials_local.h
+```
 
-The Battery monitor assumes the use of a Lolin D32 board which uses GPIO-35 as an ADC input, also it has an on-board 100K+100K voltage divider directly connected to the Battery terminals. On other boards, you will need to change the analogRead(35) statement to your board e.g. (39) and attach a voltage divider to the battery terminals. The TTGO T5 and T5S boards already contain the resistor divider on the correct pin. The FireBeetle has a battery monitor on GPIO-36.
+Then edit `owm_credentials_local.h` with:
 
-Compile and upload the code - Enjoy!
+- Wi-Fi SSID and password
+- latitude/longitude
+- city label
+- units
+- Open-Meteo timezone
+- NOAA tide station ID/name
 
-7.5" 800x480 E-Paper Layout
+`owm_credentials_local.h` is ignored by git.
 
-![alt text width="600"](/Waveshare_7_5_new.jpg)
+## Build And Flash
 
-7.5" 640x384 E-Paper Layout
+This repo is set up for PlatformIO. From the CrowPanel example directory:
 
-![alt text width="600"](/Waveshare_7_5.jpg)
+```sh
+cd examples/CrowPanel_4_2_Weather_Tides
+../../.venv-platformio/bin/platformio run -e esp32s3
+../../.venv-platformio/bin/platformio run -e esp32s3 -t upload --upload-port /dev/cu.usbserial-110
+```
 
-4.2" 400x300 E-Paper Layout
+Normal runtime behavior:
 
-![alt_text, width="400"](/Waveshare_4_2.jpg)
+- wakes every 30 minutes
+- fetches weather and tides
+- refreshes the screen
+- powers down the e-paper hardware
+- enters deep sleep
 
-3.7" 480x280 E-Paper Layout
+The refresh window is controlled by:
 
-![alt_text, width="400"](/Waveshare_3_7.jpg)
+```cpp
+long SleepDuration = 30;
+int  WakeupTime    = 7;
+int  SleepTime     = 23;
+```
 
-2.7" 264x176 E-Paper Layout
+With the current settings, the device refreshes from 07:00 through 23:59 and skips screen/API refreshes from 00:00 through 06:59.
 
-![alt_text, width="400"](/Waveshare_2_7.jpg)
+## Flash Verification
 
-2.13" 250x122 E-Paper Layout
+A successful firmware upload does not always mean the panel actually refreshed. The safer workflow is:
 
-![alt_text, width="200"](/Waveshare_2_13.jpg)
+1. build and upload `esp32s3`
+2. reset/monitor serial
+3. confirm the firmware logs `Sending CrowPanel framebuffer`
 
-1.54" 200x200 E-Paper Layout
+Example serial success signal:
 
-![alt_text, width="200"](/Waveshare_1_54.jpg)
+```text
+Sending CrowPanel framebuffer (15000 bytes)
+CrowPanel EPD ready after full refresh in 0 ms
+Starting deep-sleep period...
+```
 
-**** NOTE change needed for latest Waveshare HAT versions ****
+If the board logs `Failed to obtain time`, reset and let it try again before judging the screen.
 
-Ensure you have the latest GxEPD2 library
+## Static Preview Firmware
 
-See here: https://github.com/ZinggJM/GxEPD2/releases/
+For no-network layout checks on the physical panel:
 
-Modify this line in the code:
+```sh
+../../.venv-platformio/bin/platformio run -e esp32s3_static -t upload --upload-port /dev/cu.usbserial-110
+```
 
-display.init(115200, true, 2); // init(uint32_t serial_diag_bitrate, bool initial, uint16_t reset_duration, bool pulldown_rst_mode)
+This uses deterministic sample weather and local tide data.
 
-Wiring Schematic for ALL Waveshare E-Paper Displays
-![alt_text, width="300"](/Schematic.JPG)
+## Software Renderer
+
+The desktop software renderer lives here:
+
+```text
+examples/CrowPanel_4_2_Weather_Tides/preview/render_preview.py
+```
+
+It renders a 400x300 1-bit PNG from fixture data, useful for quick layout checks before flashing.
+
+Run from the example directory:
+
+```sh
+python3 preview/render_preview.py
+```
+
+Outputs:
+
+- `preview/software-render-raw-1bit.png`
+- `preview/software-render.png`
+
+This is an approximate renderer. It is useful for layout iteration, but the physical panel remains the final check.
+
+## Framebuffer Capture
+
+For pixel-accurate render checks, flash a framebuffer dump build and capture the exact `GFXcanvas1` bytes over serial:
+
+```sh
+../../.venv-platformio/bin/platformio run -e esp32s3_dump -t upload --upload-port /dev/cu.usbserial-110
+../../.venv-platformio/bin/python preview/capture_framebuffer.py --port /dev/cu.usbserial-110
+```
+
+Outputs:
+
+- `preview/framebuffer-capture-raw-1bit.png`
+- `preview/framebuffer-capture.png`
+
+There is also a static/no-network dump build:
+
+```sh
+../../.venv-platformio/bin/platformio run -e esp32s3_static_dump -t upload --upload-port /dev/cu.usbserial-110
+../../.venv-platformio/bin/python preview/capture_framebuffer.py --port /dev/cu.usbserial-110
+```
+
+After dump testing, flash the normal `esp32s3` firmware again so the device does not emit framebuffer dumps on every wake.
+
+## Repository Notes
+
+The active firmware is:
+
+```text
+examples/CrowPanel_4_2_Weather_Tides/CrowPanel_4_2_Weather_Tides.ino
+```
+
+Important support files:
+
+- `examples/CrowPanel_4_2_Weather_Tides/crowpanel_green_epd.h`
+- `examples/CrowPanel_4_2_Weather_Tides/local_tides.h`
+- `examples/CrowPanel_4_2_Weather_Tides/preview/render_preview.py`
+- `examples/CrowPanel_4_2_Weather_Tides/preview/capture_framebuffer.py`
+- `src/common.h`
+
+Generated build output, credentials, framebuffer captures, and generated font/gallery captures are ignored.

@@ -4,15 +4,16 @@ Working branch: `codex/crowpanel-weather-tides`
 
 ## Current State
 
-- Normal device firmware is running with Open-Meteo weather/tide data and the X11 8x13 font pass.
-- The framebuffer dump workflow works and is the preferred way to validate layout before flashing/physically checking the e-paper panel.
+- Normal device firmware is running with Open-Meteo weather/tide data and the ProFont/U8g2 metrics layout pass.
+- The framebuffer dump workflow works for exact pixel captures when needed, but normal iteration now uses physical screen checks unless a capture is requested.
 - The font gallery workflow works; see `FONT.md` for the current font notes and preference order.
 
 ## Git/Project Setup
 
-- [ ] Create a fresh standalone GitHub repo for this project instead of continuing long-term in the fork.
-- [ ] Decide whether to delete the pushed `codex/crowpanel-weather-tides` branch from the current public fork after the standalone repo exists.
+- [x] Create a fresh standalone GitHub repo for this project instead of continuing long-term in the fork.
+- [x] Delete the old public fork after the standalone repo exists.
 - [x] Keep `owm_credentials_local.h`, framebuffer captures, and generated font gallery PNGs ignored.
+- [x] Ignore duplicate generated `*.ino 2.cpp` artifacts so PlatformIO does not compile the sketch twice.
 
 ## Data Validation
 
@@ -46,11 +47,10 @@ Working branch: `codex/crowpanel-weather-tides`
 
 ## Layout/UI Tweaks
 
-- [ ] Overhaul the font/text system so it measures and renders correctly.
-  - `drawString()` measures text with Adafruit GFX bounds but renders with U8g2, which can make centering/baselines drift.
-  - Current best font for the whole display is X11 8x13; see `FONT.md`.
-  - First fix the text measurement/rendering path, then clean up any layout issues it exposes.
-  - After that, add larger X11-style fonts selectively for prominent values like current temperature, tide height, and major chart labels.
+- [x] Overhaul the font/text system so it measures and renders correctly.
+  - `drawString()` now measures with U8g2 and renders with U8g2, avoiding the old Adafruit/U8g2 width mismatch.
+  - Current best font pass uses ProFont, with larger U8g2 font buckets selected for prominent values.
+  - Several values now use measured substring placement for pixel-controlled spacing.
 - [x] Remove `RH` text from the upper-left current conditions area.
 - [x] Remove decimals from wind and temperature Y-axis labels on the bottom charts.
 - [x] Keep decimal Y-axis labels on the rainfall chart.
@@ -63,7 +63,7 @@ Working branch: `codex/crowpanel-weather-tides`
 - [x] Keep the current-time marker on the tide chart.
 - [x] Update tide chart x-axis labels to `0:00`, `6:00`, `12:00`, `18:00` and drop the final `24`.
 - [x] Add thin dashed sunrise/sunset markers to the tide chart.
-- [ ] Review the middle-right panel spacing after the next live framebuffer/physical check.
+- [x] Review and tune the middle-right panel spacing after live physical checks.
 - [x] Move the wind compass triangle back outward into the ring between the two compass circles.
   - Current position is too far inside.
   - Remove the numeric degree text from the middle; keep only text direction and wind speed.
