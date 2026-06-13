@@ -562,7 +562,7 @@ void DrawMainWx(int x, int y) {
   SetUIFont(UI_FONT_14);
   drawString(x + 5, y - 28, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
   SetUIFont(UI_FONT_12);
-  drawString(x + 5, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
+  drawString(x + 5, y - 4, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
@@ -686,8 +686,8 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
   const int graph_h = h - 24;
 
   SetUIFont(UI_FONT_08);
-  drawString(x + 6, y + 2, "24h Tide", LEFT);
-  drawString(x + w - 6, y + 2, String(max_height, 1) + "ft", RIGHT);
+  drawString(x + 6, y + 3, "24h Tide", LEFT);
+  drawString(x + w - 6, y + 3, String(max_height, 1) + "ft", RIGHT);
   display.drawRect(graph_x, graph_y, graph_w, graph_h, GxEPD_BLACK);
 
   int last_x = graph_x;
@@ -711,7 +711,7 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 
   for (int hour = 0; hour < 24; hour += 6) {
     int tx = graph_x + hour * graph_w / 24;
-    display.drawLine(tx, graph_y + graph_h - 3, tx, graph_y + graph_h, GxEPD_BLACK);
+    display.drawFastVLine(tx, graph_y + graph_h - 15, 3, GxEPD_BLACK);
     String label = String(hour) + ":00";
     drawString(tx, graph_y + graph_h - 11, label, hour == 0 ? LEFT : CENTER);
   }
@@ -732,7 +732,7 @@ void DisplayPrecipitationSection(int x, int y) {
   const int right_icon_x = x + 104;
   const int right_text_x = x + 119;
   const int top_icon_y = y + 14;
-  const int top_text_y = y + 8;
+  const int top_text_y = y + 9;
   const int bottom_icon_y = y + 39;
   const int bottom_text_y = y + 33;
 
