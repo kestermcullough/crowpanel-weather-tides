@@ -560,9 +560,21 @@ void DrawForecastWeather(int x, int y, int index) {
 //#########################################################################################
 void DrawMainWx(int x, int y) {
   SetUIFont(UI_FONT_24);
-  drawString(x + 5, y - 32, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
+  drawString(x + 5, y - 34, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
   SetUIFont(UI_FONT_14);
-  drawString(x + 5, y - 6, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
+  const int hi_low_y = y - 7;
+  const int hi_low_center_x = x + 5;
+  const int hi_low_gap = 2;
+  const String high_temp = String(WxConditions[0].High, 0) + "°";
+  const String separator = "|";
+  const String low_temp = String(WxConditions[0].Low, 0) + "°";
+  const int high_width = u8g2Fonts.getUTF8Width(high_temp.c_str());
+  const int separator_width = u8g2Fonts.getUTF8Width(separator.c_str());
+  const int low_width = u8g2Fonts.getUTF8Width(low_temp.c_str());
+  const int hi_low_left = hi_low_center_x - (high_width + separator_width + low_width + hi_low_gap * 2) / 2;
+  drawString(hi_low_left, hi_low_y, high_temp, LEFT);
+  drawString(hi_low_left + high_width + hi_low_gap, hi_low_y, separator, LEFT);
+  drawString(hi_low_left + high_width + hi_low_gap + separator_width + hi_low_gap, hi_low_y, low_temp, LEFT);
 }
 //#########################################################################################
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
