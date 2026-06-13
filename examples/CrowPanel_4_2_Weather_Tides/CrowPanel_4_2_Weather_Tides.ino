@@ -560,8 +560,8 @@ void DrawForecastWeather(int x, int y, int index) {
 //#########################################################################################
 void DrawMainWx(int x, int y) {
   SetUIFont(UI_FONT_14);
-  drawString(x + 5, y - 25, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
-  SetUIFont(UI_FONT_14);
+  drawString(x + 5, y - 28, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
+  SetUIFont(UI_FONT_12);
   drawString(x + 5, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
 }
 //#########################################################################################
@@ -711,9 +711,9 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 
   for (int hour = 0; hour < 24; hour += 6) {
     int tx = graph_x + hour * graph_w / 24;
-    display.drawLine(tx, graph_y + graph_h, tx, graph_y + graph_h + 3, GxEPD_BLACK);
+    display.drawLine(tx, graph_y + graph_h - 3, tx, graph_y + graph_h, GxEPD_BLACK);
     String label = String(hour) + ":00";
-    drawString(tx, graph_y + graph_h + 4, label, hour == 0 ? LEFT : CENTER);
+    drawString(tx, graph_y + graph_h - 11, label, hour == 0 ? LEFT : CENTER);
   }
 
   int now_x = graph_x + int((CurrentHour + CurrentMin / 60.0) * graph_w / 24.0);
@@ -1282,9 +1282,9 @@ void DrawGraph(int x_pos, int y_pos, int gwidth, int gheight, float Y1Min, float
   SetUIFont(UI_FONT_08);
   drawString(x_pos + gwidth / 2, y_pos - 13, title, CENTER);
   DrawNoonMidnightMarkers(x_pos, y_pos, gwidth, gheight);
-  for (int hour = 1; hour < 72; hour++) {
+  for (int hour = 2; hour < 72; hour += 2) {
     int tick_x = x_pos + int(hour * gwidth / 72.0);
-    display.drawFastVLine(tick_x, y_pos + gheight - 2, 3, GxEPD_BLACK);
+    display.drawFastVLine(tick_x, y_pos + gheight - 1, 2, GxEPD_BLACK);
   }
   // Draw the data
   for (int gx = 0; gx < readings; gx++) {
