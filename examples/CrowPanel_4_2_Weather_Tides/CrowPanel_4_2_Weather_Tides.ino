@@ -544,7 +544,18 @@ void DrawForecastWeather(int x, int y, int index) {
   display.drawLine(x + 1, y + 13, x + 54, y + 13, GxEPD_BLACK);
   DisplayWXicon(x + 28, y + 35, WxForecast[forecast_index].Icon, SmallIcon);
   drawString(x + 31, y + 3, ForecastTimeLabel(WxForecast[forecast_index].Dt), CENTER);
-  drawString(x + 28, y + 52, String(WxForecast[forecast_index].Temperature, 0) + "° / " + String(WxForecast[forecast_index].FeelsLike, 0) + "°", CENTER);
+  const int temp_y = y + 52;
+  const int temp_center_x = x + 28;
+  const String left_temp = String(WxForecast[forecast_index].Temperature, 0) + "°";
+  const String separator = " / ";
+  const String right_temp = String(WxForecast[forecast_index].FeelsLike, 0) + "°";
+  const int left_width = u8g2Fonts.getUTF8Width(left_temp.c_str());
+  const int separator_width = u8g2Fonts.getUTF8Width(separator.c_str());
+  const int right_width = u8g2Fonts.getUTF8Width(right_temp.c_str());
+  const int temp_left = temp_center_x - (left_width + separator_width + right_width) / 2;
+  drawString(temp_left + 2, temp_y, left_temp, LEFT);
+  drawString(temp_left + left_width, temp_y, separator, LEFT);
+  drawString(temp_left + left_width + separator_width - 2, temp_y, right_temp, LEFT);
 }
 //#########################################################################################
 void DrawMainWx(int x, int y) {
@@ -721,11 +732,11 @@ void DisplayPrecipitationSection(int x, int y) {
   const int right_icon_x = x + 104;
   const int right_text_x = x + 119;
   const int top_icon_y = y + 14;
-  const int top_text_y = y + 5;
+  const int top_text_y = y + 8;
   const int bottom_icon_y = y + 39;
   const int bottom_text_y = y + 33;
 
-  addraindrop(left_icon_x - 3, top_icon_y - 1, 4);
+  addraindrop(left_icon_x - 3, top_icon_y + 1, 4);
   drawString(left_text_x, top_text_y, precip_text, LEFT);
 
   Visibility(right_icon_x, top_icon_y + 1, FormatVisibility(WxConditions[0].Visibility), right_text_x, top_text_y);
