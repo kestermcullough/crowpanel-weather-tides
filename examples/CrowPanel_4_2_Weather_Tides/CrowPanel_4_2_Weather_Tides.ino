@@ -481,7 +481,7 @@ void DrawHeadingSection() {
 //#########################################################################################
 void DrawMainWeatherSection(int x, int y) {
   DisplayDisplayWindSection(x - 115, y - 3, WxConditions[0].Winddir, WxConditions[0].Windspeed, 40);
-  DisplayWXicon(x + 5, y - 6, WxConditions[0].Icon, LargeIcon);
+  DisplayWXicon(x + 5, y - 8, WxConditions[0].Icon, LargeIcon);
   SetUIFont(UI_FONT_10);
   DrawCurrentTideStatus(x - 120, y + 58);
   SetUIFont(UI_FONT_12);
@@ -559,7 +559,7 @@ void DrawForecastWeather(int x, int y, int index) {
 }
 //#########################################################################################
 void DrawMainWx(int x, int y) {
-  SetUIFont(UI_FONT_14);
+  SetUIFont(UI_FONT_24);
   drawString(x + 5, y - 28, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
   SetUIFont(UI_FONT_12);
   drawString(x + 5, y - 4, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
@@ -659,7 +659,7 @@ void DrawCurrentTideStatus(int x, int y) {
   bool rising = IsTideRisingAtHour(current_hour);
   SetUIFont(UI_FONT_12);
   drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
-  DrawTideArrow(x + 36, y, rising);
+  DrawTideArrow(x + 34, y + 1, rising);
 }
 //#########################################################################################
 void DrawTide24hGraph(int x, int y, int w, int h) {
