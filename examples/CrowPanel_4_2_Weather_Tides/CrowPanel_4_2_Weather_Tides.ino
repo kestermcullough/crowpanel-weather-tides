@@ -573,7 +573,6 @@ void DrawMainWx(int x, int y) {
   const int low_width = u8g2Fonts.getUTF8Width(low_temp.c_str());
   const int hi_low_left = hi_low_center_x - (high_width + separator_width + low_width + hi_low_gap * 2) / 2;
   drawString(hi_low_left, hi_low_y, high_temp, LEFT);
-  drawString(hi_low_left + high_width + hi_low_gap, hi_low_y, separator, LEFT);
   drawString(hi_low_left + high_width + hi_low_gap + separator_width + hi_low_gap, hi_low_y, low_temp, LEFT);
 }
 //#########################################################################################
@@ -671,7 +670,7 @@ void DrawCurrentTideStatus(int x, int y) {
   bool rising = IsTideRisingAtHour(current_hour);
   SetUIFont(UI_FONT_12);
   drawString(x - 4, y - 2, String(tide_height, 1) + "ft", CENTER);
-  DrawTideArrow(x + 30, y + 1, rising);
+  DrawTideArrow(x + 27, y + 1, rising);
 }
 //#########################################################################################
 void DrawTide24hGraph(int x, int y, int w, int h) {
