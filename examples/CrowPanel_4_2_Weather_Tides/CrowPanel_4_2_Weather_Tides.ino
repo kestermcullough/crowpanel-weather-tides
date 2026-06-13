@@ -728,7 +728,7 @@ void DisplayPrecipitationSection(int x, int y) {
   addraindrop(left_icon_x - 3, top_icon_y - 1, 4);
   drawString(left_text_x, top_text_y, precip_text, LEFT);
 
-  Visibility(right_icon_x, top_icon_y + 1, FormatVisibility(WxConditions[0].Visibility));
+  Visibility(right_icon_x, top_icon_y + 1, FormatVisibility(WxConditions[0].Visibility), right_text_x, top_text_y);
 
   Humidity(left_icon_x, bottom_icon_y);
   drawString(left_text_x, bottom_text_y, String(WxConditions[0].Humidity, 0) + "%", LEFT);
@@ -1166,7 +1166,7 @@ void Humidity(int x, int y) {
   display.fillTriangle(x - 4, y + 2, x, y - 8, x + 4, y + 2, GxEPD_BLACK);
 }
 //#########################################################################################
-void Visibility(int x, int y, String Visi) {
+void Visibility(int x, int y, String Visi, int text_x, int text_y) {
   float start_angle = 0.52, end_angle = 2.61;
   int r = 10;
   for (float i = start_angle; i < end_angle; i = i + 0.05) {
@@ -1180,7 +1180,7 @@ void Visibility(int x, int y, String Visi) {
   }
   display.fillCircle(x, y, r / 4, GxEPD_BLACK);
   SetUIFont(UI_FONT_12);
-  drawString(x + 14, y - 9, Visi, LEFT);
+  drawString(text_x, text_y, Visi, LEFT);
 }
 //#########################################################################################
 void addmoon(int x, int y, int scale, bool IconSize) {
