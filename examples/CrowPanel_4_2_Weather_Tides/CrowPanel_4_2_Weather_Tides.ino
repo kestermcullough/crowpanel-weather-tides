@@ -481,11 +481,11 @@ void DrawHeadingSection() {
 //#########################################################################################
 void DrawMainWeatherSection(int x, int y) {
   DisplayDisplayWindSection(x - 115, y - 3, WxConditions[0].Winddir, WxConditions[0].Windspeed, 40);
-  DisplayWXicon(x + 5, y - 5, WxConditions[0].Icon, LargeIcon);
+  DisplayWXicon(x + 5, y - 6, WxConditions[0].Icon, LargeIcon);
   SetUIFont(UI_FONT_10);
   DrawCurrentTideStatus(x - 120, y + 58);
   SetUIFont(UI_FONT_12);
-  DrawMainWx(x, y + 60);
+  DrawMainWx(x, y + 59);
   display.drawRect(0, y + 68, 232, 48, GxEPD_BLACK);
   DrawTide24hGraph(0, y + 68, 232, 48);
 }
@@ -1173,8 +1173,13 @@ void CloudCover(int x, int y, int CCover, int text_x, int text_y) {
 }
 //#########################################################################################
 void Humidity(int x, int y) {
-  display.fillCircle(x, y + 2, 4, GxEPD_BLACK);
-  display.fillTriangle(x - 4, y + 2, x, y - 8, x + 4, y + 2, GxEPD_BLACK);
+  for (int row = 0; row < 3; row++) {
+    const int yy = y - 7 + row * 5;
+    display.drawLine(x - 7, yy + 1, x - 4, yy - 1, GxEPD_BLACK);
+    display.drawLine(x - 4, yy - 1, x,     yy + 1, GxEPD_BLACK);
+    display.drawLine(x,     yy + 1, x + 4, yy - 1, GxEPD_BLACK);
+    display.drawLine(x + 4, yy - 1, x + 7, yy + 1, GxEPD_BLACK);
+  }
 }
 //#########################################################################################
 void Visibility(int x, int y, String Visi, int text_x, int text_y) {
