@@ -206,7 +206,7 @@ String ForecastTimeLabel(int unix_time) {
     strftime(output, sizeof(output), "%H:%M", timeinfo);
   }
   else {
-    strftime(output, sizeof(output), "%I  %P", timeinfo);
+    strftime(output, sizeof(output), "%I %P", timeinfo);
   }
   return String(output);
 }
@@ -560,8 +560,8 @@ void DrawForecastWeather(int x, int y, int index) {
 //#########################################################################################
 void DrawMainWx(int x, int y) {
   SetUIFont(UI_FONT_14);
-  drawString(x + 5, y - 22, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
-  SetUIFont(UI_FONT_12);
+  drawString(x + 5, y - 25, String(WxConditions[0].Temperature, 0) + "°" + (Units == "M" ? "C" : "F"), CENTER); // Show current Temperature
+  SetUIFont(UI_FONT_14);
   drawString(x + 5, y - 3, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
 }
 //#########################################################################################
