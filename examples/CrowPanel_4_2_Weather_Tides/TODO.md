@@ -11,7 +11,10 @@ Working branch: `codex/crowpanel-weather-tides`
 ## Git/Project Setup
 
 - [x] Create a fresh standalone GitHub repo for this project instead of continuing long-term in the fork.
-- [x] Delete the old public fork after the standalone repo exists.
+- [x] Delete the old pushed `codex/crowpanel-weather-tides` branch from the public fork.
+- [ ] Delete the old public fork itself.
+  - Attempted with `gh repo delete`, but the current GitHub CLI token needs the `delete_repo` scope.
+  - Finish by authorizing `gh auth refresh -h github.com -s delete_repo` or deleting the fork in GitHub settings.
 - [x] Keep `owm_credentials_local.h`, framebuffer captures, and generated font gallery PNGs ignored.
 - [x] Ignore duplicate generated `*.ino 2.cpp` artifacts so PlatformIO does not compile the sketch twice.
 
