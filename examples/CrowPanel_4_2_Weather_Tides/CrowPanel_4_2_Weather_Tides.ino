@@ -711,9 +711,9 @@ void DrawTide24hGraph(int x, int y, int w, int h) {
 
   for (int hour = 0; hour < 24; hour += 6) {
     int tx = graph_x + hour * graph_w / 24;
-    display.drawFastVLine(tx, graph_y + graph_h - 15, 3, GxEPD_BLACK);
+    display.drawFastVLine(tx, graph_y + graph_h - 3, 3, GxEPD_BLACK);
     String label = String(hour) + ":00";
-    drawString(tx, graph_y + graph_h - 11, label, hour == 0 ? LEFT : CENTER);
+    drawString(tx, graph_y + graph_h + 2, label, hour == 0 ? LEFT : CENTER);
   }
 
   int now_x = graph_x + int((CurrentHour + CurrentMin / 60.0) * graph_w / 24.0);
